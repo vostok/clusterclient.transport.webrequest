@@ -1,0 +1,24 @@
+notests *default:
+  build:
+    target: Vostok.ClusterClient.Transport.Webrequest.sln
+    configuration: NoTests
+    tool:
+      name: dotnet
+
+  install:
+      - Vostok.ClusterClient.Transport.Webrequest\bin\Release\netstandard2.0/Vostok.ClusterClient.Transport.Webrequest.dll
+
+  deps:
+    - vostok.clusterclient.core@dev
+	- vostok.commons.primitives
+    - vostok.logging.abstractions
+    - vostok.logging.console@dev
+    - vostok.logging.context@dev
+	- vostok.commons.helpers/src
+    - vostok.devtools
+
+full-build > notests:
+  deps:
+  build:
+    target: Vostok.ClusterClient.Transport.Webrequest.sln
+    configuration: Release
