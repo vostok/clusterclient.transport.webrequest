@@ -42,8 +42,8 @@
     <Reference Include="Vostok.Logging.Abstractions">
       <HintPath>..\..\vostok.logging.abstractions\Vostok.Logging.Abstractions\bin\Release\netstandard2.0\Vostok.Logging.Abstractions.dll</HintPath>
     </Reference>
-    <Reference Include="Vostok.Logging.ConsoleLog">
-      <HintPath>..\..\vostok.logging.console\Vostok.Logging.ConsoleLog\bin\Release\netstandard2.0\Vostok.Logging.ConsoleLog.dll</HintPath>
+    <Reference Include="Vostok.Logging.Console">
+      <HintPath>..\..\vostok.logging.console\Vostok.Logging.ConsoleLog\bin\Release\netstandard2.0\Vostok.Logging.Console.dll</HintPath>
     </Reference>
     <Reference Include="Vostok.ClusterClient.Core">
       <HintPath>..\..\vostok.clusterclient.core\Vostok.ClusterClient.Core\bin\Release\netstandard2.0\Vostok.ClusterClient.Core.dll</HintPath>
@@ -52,7 +52,7 @@
       <HintPath>..\..\vostok.commons.primitives\Vostok.Commons.Primitives\bin\Release\netstandard2.0\Vostok.Commons.Primitives.dll</HintPath>
     </Reference>
     <Reference Include="Vostok.Logging.Context">
-      <HintPath>..\..\vostok.clusterclient.core\Vostok.ClusterClient.Core\bin\Release\netstandard2.0\Vostok.Logging.Context.dll</HintPath>
+      <HintPath>..\..\vostok.logging.context\Vostok.Logging.Context\bin\Release\netstandard2.0\Vostok.Logging.Context.dll</HintPath>
     </Reference>
   </ItemGroup>
 

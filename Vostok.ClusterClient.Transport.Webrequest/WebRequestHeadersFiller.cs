@@ -25,7 +25,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             }
 
             SetContentLengthHeader(request, webRequest);
-            SetRequestTimeoutHeader(webRequest, timeout);
+             SetRequestTimeoutHeader(webRequest, timeout);
 
             TrySetHostExplicitly(request, webRequest);
             TrySetClientIdentityHeader(request, webRequest);
