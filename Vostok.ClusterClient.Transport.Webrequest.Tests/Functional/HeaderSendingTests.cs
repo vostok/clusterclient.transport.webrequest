@@ -36,7 +36,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [TestCase(HeaderNames.Upgrade, "HTTP/2.0, SHTTP/1.3, IRC/6.9, RTA/x11")]
         [TestCase(HeaderNames.UserAgent, "Firefox")]
         [TestCase(HeaderNames.Via, "Stargate")]
-        [TestCase(HeaderNames.XKonturRequestPriority, "Sheddable")]
+//        [TestCase(HeaderNames.XKonturRequestPriority, "Sheddable")]
         public void Should_correctly_transfer_given_header_to_server(string headerName, string headerValue)
         {
             using (var server = TestServer.StartNew(ctx => ctx.Response.StatusCode = 200))
@@ -48,7 +48,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
                 server.LastRequest.Headers[headerName].Should().Be(headerValue);
             }
         }
-
+/*
         [Test]
         public void Should_include_auxiliary_client_identity_header()
         {
@@ -100,6 +100,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
                 server.LastRequest.Headers[HeaderNames.XKonturRequestTimeout].Should().NotBe("123");
             }
         }
+        */
 
         [Test]
         public void Should_ignore_transfer_encoding_header()

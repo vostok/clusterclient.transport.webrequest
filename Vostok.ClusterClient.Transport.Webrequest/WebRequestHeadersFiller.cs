@@ -65,8 +65,10 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                 webRequest.SendChunked = true;
         }
 
-        private static void SetRequestTimeoutHeader(HttpWebRequest webRequest, TimeSpan timeout) =>
-            webRequest.Headers.Set(HeaderNames.XKonturRequestTimeout, timeout.Ticks.ToString());
+        private static void SetRequestTimeoutHeader(HttpWebRequest webRequest, TimeSpan timeout)
+        {
+        }
+        // => webRequest.Headers.Set(HeaderNames.XKonturRequestTimeout, timeout.Ticks.ToString());
 
         private static void TrySetHostExplicitly(Request request, HttpWebRequest webRequest)
         {
@@ -77,8 +79,8 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
         private static void TrySetClientIdentityHeader(Request request, HttpWebRequest webRequest)
         {
-            if (request.Headers?[HeaderNames.XKonturClientIdentity] == null)
-                webRequest.Headers.Set(HeaderNames.XKonturClientIdentity, UrlEncodingHelper.UrlEncode(HttpClientIdentity.Get()));
+//            if (request.Headers?[HeaderNames.XKonturClientIdentity] == null)
+//                webRequest.Headers.Set(HeaderNames.XKonturClientIdentity, UrlEncodingHelper.UrlEncode(HttpClientIdentity.Get()));
         }
 
         private static bool TryHandleSpecialHeaderWithProperty(HttpWebRequest webRequest, Header header)
