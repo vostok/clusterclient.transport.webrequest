@@ -1,16 +1,10 @@
-﻿using System.Net;
+using System.Net;
 using System.Net.Sockets;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Utilities
+namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Utilities
 {
-    /// <summary>
-    /// Helper class to discover free TCP ports.
-    /// </summary>
-    public static class FreeTcpPortFinder
+    internal class FreeTcpPortFinder
     {
-        /// <summary>
-        /// Returns a currently available TCP port to bind on.
-        /// </summary>
         public static int GetFreePort()
         {
             var listener = new TcpListener(IPAddress.Loopback, 0);

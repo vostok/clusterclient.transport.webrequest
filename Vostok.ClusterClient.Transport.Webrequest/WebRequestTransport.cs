@@ -22,7 +22,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         private const int PreferredReadSize = 16*1024;
         private const int LOHObjectSizeThreshold = 85*1000;
 
-        private static readonly Pool<byte[]> ReadBuffersPool = new Pool<byte[]>(() => new byte[PreferredReadSize]);
+        private static readonly IPool<byte[]> ReadBuffersPool = new Pool<byte[]>(() => new byte[PreferredReadSize]);
 
         private readonly ILog log;
         private readonly ConnectTimeLimiter connectTimeLimiter;
@@ -36,9 +36,6 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
             connectTimeLimiter = new ConnectTimeLimiter(settings, log);
             threadPoolMonitor = ThreadPoolMonitor.Instance;
-
-            // (razboynikov): if not initialize in the beginning first of the requests will have differences in settings
-            WebRequestTuner.Init();
         }
 
         public WebRequestTransport(ILog log)
@@ -78,7 +75,9 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                 LogRequestTimeout(request, timeout);
 
                 if (Settings.FixThreadPoolProblems)
+                {
                     threadPoolMonitor.ReportAndFixIfNeeded(log);
+                }
 
                 // (iloktionov): Попытаемся дождаться завершения задания по отправке запроса перед тем, как возвращать результат:
                 var senderTaskContinuation = senderTask.ContinueWith(
@@ -209,7 +208,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
                         while (bytesSent < bytesToSend)
                         {
-                            var bytesToRead = (int)Math.Min(buffer.Length, bytesToSend - bytesSent);
+                            var bytesToRead = (int) Math.Min(buffer.Length, bytesToSend - bytesSent);
 
                             int bytesRead;
 
@@ -263,7 +262,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         {
             try
             {
-                state.Response = (HttpWebResponse)await state.Request.GetResponseAsync().ConfigureAwait(false);
+                state.Response = (HttpWebResponse) await state.Request.GetResponseAsync().ConfigureAwait(false);
                 state.ResponseStream = state.Response.GetResponseStream();
                 return HttpActionStatus.Success;
             }
@@ -273,11 +272,10 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                 // (iloktionov): HttpWebRequest реагирует на коды ответа вроде 404 или 500 исключением со статусом ProtocolError.
                 if (status == HttpActionStatus.ProtocolError)
                 {
-                    state.Response = (HttpWebResponse)error.Response;
+                    state.Response = (HttpWebResponse) error.Response;
                     state.ResponseStream = state.Response.GetResponseStream();
                     return HttpActionStatus.Success;
                 }
-
                 return status;
             }
             catch (Exception error)
@@ -320,7 +318,9 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             var limit = Settings.MaxResponseBodySize?.Bytes ?? long.MaxValue;
 
             if (size > limit)
+            {
                 LogResponseBodyTooLarge(size, limit);
+            }
 
             return size > limit;
         }
@@ -329,7 +329,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         {
             try
             {
-                var contentLength = (int)state.Response.ContentLength;
+                var contentLength = (int) state.Response.ContentLength;
                 if (contentLength > 0)
                 {
                     state.BodyBuffer = Settings.BufferFactory(contentLength);
@@ -339,6 +339,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                     // (iloktionov): Если буфер размером contentLength не попадет в LOH, можно передать его напрямую для работы с сокетом.
                     // В противном случае лучше использовать небольшой промежуточный буфер из пула, т.к. ссылка на переданный сохранится надолго из-за Keep-Alive.
                     if (contentLength < LOHObjectSizeThreshold)
+                    {
                         while (totalBytesRead < contentLength)
                         {
                             var bytesToRead = Math.Min(contentLength - totalBytesRead, PreferredReadSize);
@@ -348,7 +349,9 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
                             totalBytesRead += bytesRead;
                         }
+                    }
                     else
+                    {
                         using (var bufferHandle = ReadBuffersPool.AcquireHandle())
                         {
                             var buffer = bufferHandle.Resource;
@@ -365,6 +368,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                                 totalBytesRead += bytesRead;
                             }
                         }
+                    }
 
                     if (totalBytesRead < contentLength)
                         throw new EndOfStreamException($"Response stream ended prematurely. Read only {totalBytesRead} byte(s), but Content-Length specified {contentLength}.");
@@ -437,13 +441,17 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             }
         }
 
-        private static bool IsCancellationException(Exception error) =>
-            error is OperationCanceledException || (error as WebException)?.Status == WebExceptionStatus.RequestCanceled;
+        private static bool IsCancellationException(Exception error)
+        {
+            return error is OperationCanceledException || (error as WebException)?.Status == WebExceptionStatus.RequestCanceled;
+        }
 
         #region Logging
 
-        private void LogRequestTimeout(Request request, TimeSpan timeout) =>
+        private void LogRequestTimeout(Request request, TimeSpan timeout)
+        {
             log.Error($"Request timed out. Target = {request.Url.Authority}. Timeout = {timeout.ToPrettyString()}.");
+        }
 
         private void LogConnectionFailure(Request request, WebException error, int attempt)
         {
@@ -451,31 +459,49 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             var exception = error.InnerException ?? error;
 
             if (attempt == Settings.ConnectionAttempts)
-                log.Error(exception, message);
+            {
+                log.Error(message, exception);
+            }
             else
-                log.Warn(exception, message);
+            {
+                log.Warn(message, exception);
+            }
         }
 
-        private void LogWebException(WebException error) =>
-            log.Error(error.InnerException ?? error, $"Error in sending request. Status = {error.Status}.");
+        private void LogWebException(WebException error)
+        {
+            log.Error($"Error in sending request. Status = {error.Status}.", error.InnerException ?? error);
+        }
 
-        private void LogUnknownException(Exception error) =>
-            log.Error(error, "Unknown error in sending request.");
+        private void LogUnknownException(Exception error)
+        {
+            log.Error("Unknown error in sending request.", error);
+        }
 
-        private void LogSendBodyFailure(Request request, Exception error) =>
-            log.Error(error, "Error in sending request body to " + request.Url.Authority);
+        private void LogSendBodyFailure(Request request, Exception error)
+        {
+            log.Error("Error in sending request body to " + request.Url.Authority, error);
+        }
 
-        private void LogUserStreamFailure(Exception error) =>
-            log.Error(error, "Failure in reading input stream while sending request body.");
+        private void LogUserStreamFailure(Exception error)
+        {
+            log.Error("Failure in reading input stream while sending request body.", error);
+        }
 
-        private void LogReceiveBodyFailure(Request request, Exception error) =>
-            log.Error(error, "Error in receiving request body from " + request.Url.Authority);
+        private void LogReceiveBodyFailure(Request request, Exception error)
+        {
+            log.Error("Error in receiving request body from " + request.Url.Authority, error);
+        }
 
-        private void LogFailedToWaitForRequestAbort() =>
+        private void LogFailedToWaitForRequestAbort()
+        {
             log.Warn($"Timed out request was aborted but did not complete in {Settings.RequestAbortTimeout.ToPrettyString()}.");
+        }
 
-        private void LogResponseBodyTooLarge(long size, long limit) =>
+        private void LogResponseBodyTooLarge(long size, long limit)
+        {
             log.Error($"Response body size {size} is larger than configured limit of {limit} bytes.");
+        }
 
         #endregion
     }

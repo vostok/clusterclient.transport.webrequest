@@ -14,9 +14,9 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [TestCase(HeaderNames.Host, "vm-service")]
         [TestCase(HeaderNames.LastModified, "Wed, 21 Oct 2015 07:28:00 GMT")]
         [TestCase(HeaderNames.Location, "http://server:545/file")]
-//        [TestCase(HeaderNames.XKonturClientIdentity, "Abonents.Service")]
-//        [TestCase(HeaderNames.XKonturRequestPriority, "Sheddable")]
-//        [TestCase(HeaderNames.XKonturRequestTimeout, "345345345")]
+        [TestCase(HeaderNames.ClientApplication, "Abonents.Service")]
+        [TestCase(HeaderNames.RequestPriority, "Sheddable")]
+        [TestCase(HeaderNames.RequestTimeout, "345345345")]
         public void Should_correctly_receive_given_header_from_server(string headerName, string headerValue)
         {
             using (var server = TestServer.StartNew(ctx =>

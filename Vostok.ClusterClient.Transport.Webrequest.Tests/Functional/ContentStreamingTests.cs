@@ -7,9 +7,9 @@ using FluentAssertions;
 using NUnit.Framework;
 using Vostok.ClusterClient.Core.Model;
 using Vostok.ClusterClient.Transport.Webrequest.Tests.Functional.Helpers;
-using Vostok.ClusterClient.Transport.Webrequest.Utilities;
 using Vostok.Commons.Helpers.Conversions;
 using Vostok.Commons.Helpers.Extensions;
+using Vostok.Commons.Threading;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
 {
@@ -18,7 +18,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [SetUp]
         public void TestSetup()
         {
-            Transport.Settings.UseResponseStreaming = _ => true;
+            transport.Settings.UseResponseStreaming = _ => true;
         }
 
         [Test]
@@ -43,7 +43,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [Test]
         public void Should_return_a_response_without_stream_when_asked_to()
         {
-            Transport.Settings.UseResponseStreaming = _ => false;
+            transport.Settings.UseResponseStreaming = _ => false;
 
             using (var server = TestServer.StartNew(
                 ctx =>
@@ -62,7 +62,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         }
 
         [Test]
-        [MaxTime(3000)]
+        [Timeout(3000)]
         public void Should_return_a_stream_immediately_even_when_server_sends_body_slowly()
         {
             using (var server = TestServer.StartNew(
@@ -72,7 +72,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
 
                     for (var i = 0; i < 10; i++)
                     {
-                        var content = ThreadSafeRandom.NextBytes(4.Kilobytes());
+                        var content = ThreadSafeRandom.NextBytes((long) 4.Kilobytes());
 
                         ctx.Response.OutputStream.Write(content, 0, content.Length);
                         ctx.Response.OutputStream.Flush();
@@ -90,9 +90,30 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         }
 
         [Test]
+        public void Should_release_server_connection_after_disposing_response()
+        {
+            var content = ThreadSafeRandom.NextBytes((long) 4.Kilobytes());
+
+            using (var server = TestServer.StartNew(
+                ctx =>
+                {
+                    ctx.Response.StatusCode = 200;
+                    ctx.Response.OutputStream.Write(content, 0, content.Length);
+                }))
+            {
+                for (var i = 0; i < 10; i++)
+                {
+                    Send(Request.Get(server.Url)).Dispose();
+                }
+
+                GetActiveConnections(server).Should().Be(1);
+            }
+        }
+
+        [Test]
         public void Should_return_a_readable_stream_in_response()
         {
-            var content = ThreadSafeRandom.NextBytes(512.Kilobytes());
+            var content = ThreadSafeRandom.NextBytes((long) 512.Kilobytes());
 
             using (var server = TestServer.StartNew(
                 ctx =>
@@ -116,7 +137,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         public void Should_be_able_to_stream_a_really_large_response_body()
         {
             // (iloktionov): 2 GB
-            var contentChunk = ThreadSafeRandom.NextBytes(64.Kilobytes());
+            var contentChunk = ThreadSafeRandom.NextBytes((long) 64.Kilobytes());
             var contentChunksCount = 32 * 1024L;
 
             using (var server = TestServer.StartNew(
@@ -152,7 +173,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [Test]
         public void Should_not_throw_any_errors_when_disposing_stream_after_server_closes_connection()
         {
-            var content = ThreadSafeRandom.NextBytes(512.Kilobytes());
+            var content = ThreadSafeRandom.NextBytes((long) 512.Kilobytes());
 
             using (var server = TestServer.StartNew(
                 ctx =>
@@ -177,7 +198,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [Test]
         public void Should_throw_an_error_when_reading_stream_after_server_closes_connection()
         {
-            var content = ThreadSafeRandom.NextBytes(512.Kilobytes());
+            var content = ThreadSafeRandom.NextBytes((long) 512.Kilobytes());
 
             using (var server = TestServer.StartNew(
                 ctx =>

@@ -37,17 +37,22 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
             var fixedStringBuilder = new StringBuilder(utf8Bytes.Length);
 
-            foreach (var t in utf8Bytes)
-                fixedStringBuilder.Append((char)t);
+            for (var i = 0; i < utf8Bytes.Length; i++)
+            {
+                fixedStringBuilder.Append((char) utf8Bytes[i]);
+            }
 
             return fixedStringBuilder.ToString();
         }
 
         private static bool IsAscii(string value)
         {
-            foreach (var ch in value)
-                if (ch < MinASCII || ch > MaxASCII)
+            for (var i = 0; i < value.Length; i++)
+            {
+                var currentCharacter = value[i];
+                if (currentCharacter < MinASCII || currentCharacter > MaxASCII)
                     return false;
+            }
 
             return true;
         }

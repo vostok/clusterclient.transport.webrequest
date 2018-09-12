@@ -44,7 +44,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
             {
                 var response = Send(Request.Get(server.Url));
 
-                response.Code.Should().Be(code);
+                response.Code.Should().Be((ResponseCode)code);
             }
         }
     }

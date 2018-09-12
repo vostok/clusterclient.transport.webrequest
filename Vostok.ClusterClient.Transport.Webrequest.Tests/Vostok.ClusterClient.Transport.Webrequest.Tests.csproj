@@ -19,7 +19,7 @@
   <ItemGroup>
     <Reference Include="System.Web" Condition="'$(TargetFramework)' == 'net471'" />
     <Reference Include="Vostok.ClusterClient.Core">
-      <HintPath>..\..\vostok.clusterclient.core\Vostok.ClusterClient.Core\bin\Debug\netstandard2.0\Vostok.ClusterClient.Core.dll</HintPath>
+      <HintPath>..\..\vostok.clusterclient.core\Vostok.ClusterClient.Core\bin\Release\netstandard2.0\Vostok.ClusterClient.Core.dll</HintPath>
     </Reference>
     <Reference Include="Vostok.Logging.Abstractions">
       <SpecificVersion>False</SpecificVersion>
@@ -39,4 +39,9 @@
       <HintPath>..\..\vostok.commons.primitives\Vostok.Commons.Primitives\bin\Release\netstandard2.0\Vostok.Commons.Primitives.dll</HintPath>
     </Reference>
   </ItemGroup>
+
+  <ItemGroup>
+    <Compile Include="..\..\vostok.commons.threading\Vostok.Commons.Threading\ThreadSafeRandom.cs" Link="Threading\ThreadSafeRandom.cs" />
+  </ItemGroup>
+  
 </Project>

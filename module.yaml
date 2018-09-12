@@ -9,7 +9,7 @@ notests *default:
       - Vostok.ClusterClient.Transport.Webrequest\bin\Release\netstandard2.0/Vostok.ClusterClient.Transport.Webrequest.dll
 
   deps:
-    - vostok.clusterclient.core
+    - vostok.clusterclient.core/develop
     - vostok.commons.primitives
     - vostok.logging.abstractions
     - vostok.logging.console

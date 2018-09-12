@@ -5,8 +5,10 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 {
     internal static class ResponseFactory
     {
-        public static Response BuildSuccessResponse(WebRequestState state) =>
-            BuildResponse((ResponseCode)(int)state.Response.StatusCode, state);
+        public static Response BuildSuccessResponse(WebRequestState state)
+        {
+            return BuildResponse((ResponseCode) (int) state.Response.StatusCode, state);
+        }
 
         public static Response BuildFailureResponse(HttpActionStatus status, WebRequestState state)
         {
@@ -35,13 +37,15 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             }
         }
 
-        public static Response BuildResponse(ResponseCode code, WebRequestState state) =>
-            new Response(
-                code,
-                CreateResponseContent(state),
+        public static Response BuildResponse(ResponseCode code, WebRequestState state)
+        {
+            return new Response(
+                code, 
+                CreateResponseContent(state), 
                 CreateResponseHeaders(state),
                 CreateResponseStream(state)
             );
+        }
 
         private static Content CreateResponseContent(WebRequestState state)
         {
@@ -52,7 +56,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                 return new Content(state.BodyBuffer, 0, state.BodyBufferLength);
 
             if (state.BodyStream != null)
-                return new Content(state.BodyStream.GetBuffer(), 0, (int)state.BodyStream.Position);
+                return new Content(state.BodyStream.GetBuffer(), 0, (int) state.BodyStream.Position);
 
             return null;
         }
@@ -65,12 +69,16 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                 return headers;
 
             foreach (var key in state.Response.Headers.AllKeys)
+            {
                 headers = headers.Set(key, state.Response.Headers[key]);
+            }
 
             return headers;
         }
 
-        private static Stream CreateResponseStream(WebRequestState state) =>
-            state.ReturnStreamDirectly ? new ResponseBodyStream(state) : null;
+        private static Stream CreateResponseStream(WebRequestState state)
+        {
+            return state.ReturnStreamDirectly ? new ResponseBodyStream(state) : null;
+        }
     }
 }

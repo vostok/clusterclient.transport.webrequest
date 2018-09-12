@@ -8,8 +8,6 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 {
     public class WebRequestTransportSettings
     {
-        public int MaxConnectionsPerEndpoint { get; set; }= 10*1000;
-        
         public bool Pipelined { get; set; } = true;
 
         public bool FixThreadPoolProblems { get; set; } = true;
@@ -18,9 +16,13 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
         public TimeSpan? ConnectionTimeout { get; set; } = 750.Milliseconds();
 
+        public TimeSpan ConnectionIdleTimeout { get; set; } = 2.Minutes();
+
         public TimeSpan RequestAbortTimeout { get; set; } = 250.Milliseconds();
 
         public IWebProxy Proxy { get; set; } = null;
+
+        public int MaxConnectionsPerEndpoint = 10 * 1000;
 
         public DataSize? MaxResponseBodySize { get; set; } = null;
 
@@ -29,14 +31,6 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         public string ConnectionGroupName { get; set; } = null;
 
         public bool AllowAutoRedirect { get; set; } = false;
-
-        // TODO: should it be public?
-        
-        internal Func<int, byte[]> BufferFactory { get; set; } = size => new byte[size];
-
-        internal bool FixNonAsciiHeaders { get; set; } = false;
-                
-        public TimeSpan ConnectionIdleTimeout { get; set; } = 2.Minutes();
 
         public bool TcpKeepAliveEnabled { get; set; } = false;
 
@@ -48,5 +42,8 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
         public X509Certificate2[] ClientCertificates { get; set; } = null;
 
+        internal Func<int, byte[]> BufferFactory { get; set; } = size => new byte[size];
+
+        internal bool FixNonAsciiHeaders { get; set; } = false;
     }
 }

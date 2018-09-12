@@ -25,7 +25,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             }
 
             SetContentLengthHeader(request, webRequest);
-             SetRequestTimeoutHeader(webRequest, timeout);
+            SetRequestTimeoutHeader(webRequest, timeout);
 
             TrySetHostExplicitly(request, webRequest);
             TrySetClientIdentityHeader(request, webRequest);
@@ -62,13 +62,15 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
             var streamContent = request.StreamContent;
             if (streamContent != null && streamContent.Length == null)
+            {
                 webRequest.SendChunked = true;
+            }
         }
 
         private static void SetRequestTimeoutHeader(HttpWebRequest webRequest, TimeSpan timeout)
         {
+            webRequest.Headers.Set(HeaderNames.RequestTimeout, timeout.Ticks.ToString());
         }
-        // => webRequest.Headers.Set(HeaderNames.XKonturRequestTimeout, timeout.Ticks.ToString());
 
         private static void TrySetHostExplicitly(Request request, HttpWebRequest webRequest)
         {
@@ -79,8 +81,10 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
         private static void TrySetClientIdentityHeader(Request request, HttpWebRequest webRequest)
         {
-//            if (request.Headers?[HeaderNames.XKonturClientIdentity] == null)
-//                webRequest.Headers.Set(HeaderNames.XKonturClientIdentity, UrlEncodingHelper.UrlEncode(HttpClientIdentity.Get()));
+            if (request.Headers?[HeaderNames.ClientApplication] == null)
+            {
+                webRequest.Headers.Set(HeaderNames.ClientApplication, UrlEncodingHelper.UrlEncode(HttpClientIdentity.Get()));
+            }
         }
 
         private static bool TryHandleSpecialHeaderWithProperty(HttpWebRequest webRequest, Header header)
@@ -108,7 +112,9 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                 var ranges = RangeHeaderValue.Parse(header.Value);
 
                 foreach (var range in ranges.Ranges)
+                {
                     webRequest.AddRange(ranges.Unit, range.From ?? 0, range.To ?? 0);
+                }
 
                 return true;
             }
@@ -128,10 +134,13 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             return false;
         }
 
-        private static bool NeedToSkipHeader(string name) =>
-            name.Equals(HeaderNames.ContentLength) ||
-            name.Equals(HeaderNames.Connection) ||
-            name.Equals(HeaderNames.Host) ||
-            name.Equals(HeaderNames.TransferEncoding);
+        private static bool NeedToSkipHeader(string name)
+        {
+            return
+                name.Equals(HeaderNames.ContentLength) ||
+                name.Equals(HeaderNames.Connection) ||
+                name.Equals(HeaderNames.Host) ||
+                name.Equals(HeaderNames.TransferEncoding);
+        }
     }
 }

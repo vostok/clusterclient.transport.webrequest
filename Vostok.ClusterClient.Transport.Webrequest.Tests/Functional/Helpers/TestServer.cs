@@ -4,29 +4,33 @@ using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
 using System.Web;
-using Vostok.ClusterClient.Transport.Webrequest.Utilities;
+using Vostok.ClusterClient.Transport.Webrequest.Tests.Utilities;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional.Helpers
 {
     internal class TestServer : IDisposable
     {
         private readonly HttpListener listener;
+        private readonly int port;
+        private readonly string host;
         private volatile ReceivedRequest lastRequest;
 
         public TestServer()
         {
-            Port = FreeTcpPortFinder.GetFreePort();
-            Host = Dns.GetHostName();
+            port = FreeTcpPortFinder.GetFreePort();
+            host = Dns.GetHostName();
             listener = new HttpListener();
-            listener.Prefixes.Add($"http://+:{Port}/");
+            listener.Prefixes.Add($"http://+:{port}/");
         }
 
         public ReceivedRequest LastRequest => lastRequest;
 
-        public Uri Url => new Uri($"http://{Host}:{Port}/");
+        public Uri Url => new Uri($"http://{host}:{port}/");
 
-        public string Host { get; private set; }
-        public int Port { get; private set; }
+        public string Host => host;
+
+        public int Port => port;
+
         public bool BufferRequestBody { get; set; } = true;
 
         public static TestServer StartNew(Action<HttpListenerContext> handle)
@@ -49,7 +53,6 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional.Helpers
                     {
                         var context = await listener.GetContextAsync();
 
-#pragma warning disable CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                         Task.Run(
                             () =>
                             {
@@ -59,7 +62,6 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional.Helpers
 
                                 context.Response.Close();
                             });
-#pragma warning restore CS4014 // Because this call is not awaited, execution of the current method continues before the call is completed
                     }
                 });
         }
@@ -72,13 +74,12 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional.Helpers
 
         private ReceivedRequest DescribeReceivedRequest(HttpListenerRequest request)
         {
-            var query = HttpUtility.ParseQueryString(request.Url.Query);
             var receivedRequest = new ReceivedRequest
             {
                 Url = request.Url,
                 Method = request.HttpMethod,
                 Headers = request.Headers,
-                Query = query,
+                Query = HttpUtility.ParseQueryString(request.Url.Query),
             };
 
             if (BufferRequestBody)

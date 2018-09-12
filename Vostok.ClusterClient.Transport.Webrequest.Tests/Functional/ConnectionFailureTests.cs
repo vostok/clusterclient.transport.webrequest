@@ -1,7 +1,7 @@
 ﻿using FluentAssertions;
 using NUnit.Framework;
 using Vostok.ClusterClient.Core.Model;
-using Vostok.ClusterClient.Transport.Webrequest.Utilities;
+using Vostok.ClusterClient.Transport.Webrequest.Tests.Utilities;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
 {
@@ -12,7 +12,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         {
             var response = Send(Request.Get("http://255.255.255.255/"));
 
-            response.Code.Should().Be(ResponseCode.UnknownFailure);
+            response.Code.Should().Be(ResponseCode.ConnectFailure);
         }
 
         [Test]
@@ -26,10 +26,9 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [Test]
         public void Should_return_ConnectFailure_code_when_server_does_not_listen_on_needed_port()
         {
-            var port = FreeTcpPortFinder.GetFreePort();
-            var response = Send(Request.Get($"http://localhost:{port}/"));
+            var response = Send(Request.Get($"http://localhost:{FreeTcpPortFinder.GetFreePort()}/"));
 
-            response.Code.Should().Be(ResponseCode.UnknownFailure);
+            response.Code.Should().Be(ResponseCode.ConnectFailure);
         }
     }
 }

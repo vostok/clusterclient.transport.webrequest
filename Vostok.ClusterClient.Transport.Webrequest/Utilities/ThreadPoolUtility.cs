@@ -1,9 +1,9 @@
-﻿using System;
+using System;
 using System.Threading;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.Utilities
 {
-    public static class ThreadPoolUtility
+    internal static class ThreadPoolUtility
     {
         public const int MaximumThreads = short.MaxValue;
 

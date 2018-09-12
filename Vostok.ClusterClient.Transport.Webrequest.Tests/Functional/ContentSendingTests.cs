@@ -4,7 +4,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Vostok.ClusterClient.Core.Model;
 using Vostok.ClusterClient.Transport.Webrequest.Tests.Functional.Helpers;
-using Vostok.ClusterClient.Transport.Webrequest.Utilities;
+using Vostok.Commons.Threading;
 using Vostok.Commons.Helpers.Conversions;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
@@ -21,7 +21,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         {
             using (var server = TestServer.StartNew(ctx => ctx.Response.StatusCode = 200))
             {
-                var content = ThreadSafeRandom.NextBytes(size.Bytes());
+                var content = ThreadSafeRandom.NextBytes((long) size.Bytes());
 
                 var request = Request.Put(server.Url).WithContent(content);
 
@@ -41,12 +41,13 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         {
             using (var server = TestServer.StartNew(ctx => ctx.Response.StatusCode = 200))
             {
-                var content = ThreadSafeRandom.NextBytes(size.Bytes());
-                var guid = Guid.NewGuid().ToByteArray();
+                var content = ThreadSafeRandom.NextBytes((long) size.Bytes());
 
                 var contentStream = new MemoryStream();
 
                 contentStream.Write(content, 0, content.Length);
+
+                var guid = Guid.NewGuid().ToByteArray();
                 contentStream.Write(guid, 0, guid.Length);
                 contentStream.Position = 0;
 
@@ -68,7 +69,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         {
             using (var server = TestServer.StartNew(ctx => ctx.Response.StatusCode = 200))
             {
-                var content = ThreadSafeRandom.NextBytes(size.Bytes());
+                var content = ThreadSafeRandom.NextBytes((long) size.Bytes());
 
                 var contentStream = new MemoryStream(content, false);
 
@@ -77,6 +78,23 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
                 Send(request);
 
                 server.LastRequest.Body.Should().Equal(content);
+            }
+        }
+
+        [Test]
+        public void Should_be_able_to_send_a_really_large_request_body()
+        {
+            using (var server = TestServer.StartNew(ctx => ctx.Response.StatusCode = 200))
+            {
+                server.BufferRequestBody = false;
+
+                var requestBodySize = 3.Gigabytes().Bytes;
+
+                var request = Request.Put(server.Url).WithContent(new EndlessZerosStream(), requestBodySize);
+
+                Send(request);
+
+                server.LastRequest.BodySize.Should().Be(requestBodySize);
             }
         }
 

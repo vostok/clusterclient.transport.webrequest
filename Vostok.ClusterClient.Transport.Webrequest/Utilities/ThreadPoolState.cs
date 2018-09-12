@@ -1,6 +1,6 @@
-﻿namespace Vostok.ClusterClient.Transport.Webrequest.Utilities
+namespace Vostok.ClusterClient.Transport.Webrequest.Utilities
 {
-    public struct ThreadPoolState
+    internal struct ThreadPoolState
     {
         public ThreadPoolState(int minWorkerThreads, int usedThreads, int minIocpThreads, int usedIocpThreads)
             : this()

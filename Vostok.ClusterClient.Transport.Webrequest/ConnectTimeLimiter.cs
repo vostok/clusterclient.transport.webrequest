@@ -67,9 +67,13 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             var exception = error.InnerException ?? error;
 
             if (attempt == settings.ConnectionAttempts)
-                log.Error(exception, message);
+            {
+                log.Error(message, exception);
+            }
             else
-                log.Warn(exception, message);
+            {
+                log.Warn(message, exception);
+            }
         }
     }
 }

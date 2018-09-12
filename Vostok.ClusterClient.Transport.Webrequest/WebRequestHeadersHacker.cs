@@ -8,7 +8,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 {
     internal static class WebRequestHeadersHacker
     {
-        private static readonly Action<WebHeaderCollection> Unlocker;
+        private static readonly Action<WebHeaderCollection> unlocker;
         private static volatile bool canUnlock;
 
         static WebRequestHeadersHacker()
@@ -25,14 +25,14 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                 var headersTypeValue = Expression.Convert(Expression.Constant(0), headersTypeField.FieldType);
                 var assignment = Expression.Assign(headersType, headersTypeValue);
 
-                Unlocker = Expression.Lambda<Action<WebHeaderCollection>>(assignment, headersParameter).Compile();
+                unlocker = Expression.Lambda<Action<WebHeaderCollection>>(assignment, headersParameter).Compile();
             }
             catch
             {
-                Unlocker = null;
+                unlocker = null;
             }
 
-            canUnlock = Unlocker != null;
+            canUnlock = unlocker != null;
         }
 
         public static bool TryUnlockRestrictedHeaders(HttpWebRequest request, ILog log)
@@ -42,12 +42,12 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
             try
             {
-                Unlocker(request.Headers);
+                unlocker(request.Headers);
             }
             catch (Exception error)
             {
                 if (canUnlock)
-                    log.Warn(error, "Failed to unlock HttpWebRequestHeaders for unsafe assignment.");
+                    log.Warn("Failed to unlock HttpWebRequestHeaders for unsafe assignment.", error);
 
                 return canUnlock = false;
             }

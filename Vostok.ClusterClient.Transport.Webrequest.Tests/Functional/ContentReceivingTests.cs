@@ -2,8 +2,8 @@
 using NUnit.Framework;
 using Vostok.ClusterClient.Core.Model;
 using Vostok.ClusterClient.Transport.Webrequest.Tests.Functional.Helpers;
-using Vostok.ClusterClient.Transport.Webrequest.Utilities;
 using Vostok.Commons.Helpers.Conversions;
+using Vostok.Commons.Threading;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
 {
@@ -17,7 +17,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [TestCase(4 * 1024 * 1024)]
         public void Should_be_able_to_receive_content_of_given_size(int size)
         {
-            var content = ThreadSafeRandom.NextBytes(size.Bytes());
+            var content = ThreadSafeRandom.NextBytes((long) size.Bytes());
 
             using (var server = TestServer.StartNew(
                 ctx =>
@@ -36,7 +36,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [Test]
         public void Should_read_response_body_greater_than_64k_with_non_successful_code()
         {
-            var content = ThreadSafeRandom.NextBytes(100.Kilobytes());
+            var content = ThreadSafeRandom.NextBytes((long) 100.Kilobytes());
 
             using (var server = TestServer.StartNew(
                 ctx =>
@@ -55,7 +55,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [Test]
         public void Should_read_response_body_without_content_length()
         {
-            var content = ThreadSafeRandom.NextBytes(500.Kilobytes());
+            var content = ThreadSafeRandom.NextBytes((long) 500.Kilobytes());
 
             using (var server = TestServer.StartNew(
                 ctx =>
@@ -73,9 +73,9 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [Test]
         public void Should_return_http_517_when_response_body_size_is_larger_than_configured_limit_when_content_length_is_known()
         {
-            Transport.Settings.MaxResponseBodySize = 1.Kilobytes();
+            transport.Settings.MaxResponseBodySize = 1.Kilobytes();
 
-            var content = ThreadSafeRandom.NextBytes(1.Kilobytes() + 1.Bytes());
+            var content = ThreadSafeRandom.NextBytes((long) (1.Kilobytes() + 1.Bytes()));
 
             using (var server = TestServer.StartNew(
                 ctx =>
@@ -95,9 +95,9 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [Test]
         public void Should_return_http_517_when_response_body_size_is_larger_than_configured_limit_when_content_length_is_unknown()
         {
-            Transport.Settings.MaxResponseBodySize = 1.Kilobytes();
+            transport.Settings.MaxResponseBodySize = 1.Kilobytes();
 
-            var content = ThreadSafeRandom.NextBytes(1.Kilobytes() + 1.Bytes());
+            var content = ThreadSafeRandom.NextBytes((long) (1.Kilobytes() + 1.Bytes()));
 
             using (var server = TestServer.StartNew(
                 ctx =>
@@ -116,7 +116,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [Test]
         public void Should_return_response_with_correct_content_length_when_buffer_factory_is_overriden()
         {
-            Transport.Settings.BufferFactory = size => new byte[size * 2];
+            transport.Settings.BufferFactory = size => new byte[size * 2];
 
             var content = ThreadSafeRandom.NextBytes(1234);
 

@@ -1,9 +1,9 @@
 ﻿using System.Threading;
 using FluentAssertions;
+using FluentAssertions.Extensions;
 using NUnit.Framework;
 using Vostok.ClusterClient.Core.Model;
 using Vostok.ClusterClient.Transport.Webrequest.Tests.Functional.Helpers;
-using Vostok.Commons.Helpers.Conversions;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
 {
@@ -50,7 +50,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
 
         private Response SendWithCancellation(Request request)
         {
-            var sendTask = Transport.SendAsync(request, 1.Minutes(), token);
+            var sendTask = transport.SendAsync(request, 1.Minutes(), token);
 
             tokenSource.CancelAfter(200.Milliseconds());
 

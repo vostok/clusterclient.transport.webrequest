@@ -3,20 +3,22 @@ using System.Linq.Expressions;
 using System.Net;
 using Vostok.ClusterClient.Transport.Webrequest.Utilities;
 using Vostok.Logging.Abstractions;
-using Vostok.Logging.Context;
 
 namespace Vostok.ClusterClient.Transport.Webrequest
 {
     internal static class ConnectTimeoutHelper
     {
-        private static readonly object Sync = new object();
+        private static readonly object sync = new object();
+
+        private static volatile bool canCheckSocket = true;
+
         private static Func<HttpWebRequest, bool> isSocketConnected;
 
         public static bool IsSocketConnected(HttpWebRequest request, ILog log)
         {
             Initialize(log);
 
-            if (!CanCheckSocket)
+            if (!canCheckSocket)
                 return true;
 
             try
@@ -25,47 +27,49 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             }
             catch (Exception error)
             {
-                CanCheckSocket = false;
+                canCheckSocket = false;
 
-                WrapLog(log).Error(error, "Failed to check socket connection");
+                WrapLog(log).Error("Failed to check socket connection", error);
             }
 
             return true;
         }
 
-        public static bool CanCheckSocket { get; private set; } = true;
+        public static bool CanCheckSocket => canCheckSocket;
 
         private static void Initialize(ILog log)
         {
-            if (isSocketConnected != null || !CanCheckSocket)
+            if (isSocketConnected != null || !canCheckSocket)
                 return;
 
             Exception savedError = null;
 
-            lock (Sync)
+            lock (sync)
             {
-                if (isSocketConnected != null || !CanCheckSocket)
+                if (isSocketConnected != null || !canCheckSocket)
                     return;
 
                 try
                 {
                     if (RuntimeDetector.IsDotNetFramework)
+                    {
                         isSocketConnected = BuildSocketConnectedChecker();
+                    }
                     else
                     {
                         isSocketConnected = _ => true;
-                        CanCheckSocket = false;
+                        canCheckSocket = false;
                     }
                 }
                 catch (Exception error)
                 {
-                    CanCheckSocket = false;
+                    canCheckSocket = false;
                     savedError = error;
                 }
             }
 
             if (savedError != null)
-                WrapLog(log).Error(savedError, "Failed to build connection checker lambda");
+                WrapLog(log).Error("Failed to build connection checker lambda", savedError);
         }
 
         /// <summary>
@@ -91,9 +95,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
         private static ILog WrapLog(ILog log)
         {
-            // todo(Mansiper): make wraper with default prefix
-            return log.WithContextualPrefix();
-            // return log.WithPrefix(typeof (ConnectTimeoutHelper).Name);
+            return log.ForContext(typeof (ConnectTimeoutHelper).Name);
         }
     }
 }
