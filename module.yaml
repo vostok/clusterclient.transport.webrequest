@@ -10,11 +10,11 @@ notests *default:
 
   deps:
     - vostok.clusterclient.core
-	- vostok.commons.primitives
+    - vostok.commons.primitives
     - vostok.logging.abstractions
     - vostok.logging.console
     - vostok.logging.context
-	- vostok.commons.helpers/src
+    - vostok.commons.helpers/src
     - vostok.devtools
 
 full-build > notests:

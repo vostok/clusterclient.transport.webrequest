@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Security;
+using Vostok.ClusterClient.Transport.Webrequest.ArpCache;
 using Vostok.ClusterClient.Transport.Webrequest.Utilities;
 
 namespace Vostok.ClusterClient.Transport.Webrequest
@@ -8,7 +9,14 @@ namespace Vostok.ClusterClient.Transport.Webrequest
     internal static class WebRequestTuner
     {
         private static readonly bool IsMono = RuntimeDetector.IsMono;
+        
+        private static readonly BindIPEndPoint AddressSniffer = (servicePoint, endPoint, count) =>
+        {
+            ArpCacheMaintainer.ReportAddress(endPoint.Address);
+            return null;
+        };
 
+        
         static WebRequestTuner()
         {
             if (!IsMono)
@@ -37,16 +45,41 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             request.AllowReadStreamBuffering = false;
             request.AuthenticationLevel = AuthenticationLevel.None;
             request.AutomaticDecompression = DecompressionMethods.None;
-            request.ServicePoint.Expect100Continue = false;
-            request.ServicePoint.ConnectionLimit = settings.MaxConnectionsPerEndpoint;
-            request.ServicePoint.UseNagleAlgorithm = false;
+            
+            var servicePoint = request.ServicePoint;
+
+            servicePoint.Expect100Continue = false;
+            servicePoint.UseNagleAlgorithm = false;
+            servicePoint.ConnectionLimit = settings.MaxConnectionsPerEndpoint;
+            servicePoint.MaxIdleTime = (int) settings.ConnectionIdleTimeout.TotalMilliseconds;
+
+            if (settings.TcpKeepAliveEnabled)
+            {
+                servicePoint.SetTcpKeepAlive(true, (int) settings.TcpKeepAliveTime.TotalMilliseconds, (int) settings.TcpKeepAlivePeriod.TotalMilliseconds);
+            }
+
+            if (settings.ArpCacheWarmupEnabled)
+            {
+                if (servicePoint.BindIPEndPointDelegate == null)
+                    servicePoint.BindIPEndPointDelegate = AddressSniffer;
+            }
+            else
+            {
+                servicePoint.BindIPEndPointDelegate = null;
+            }
 
             if (!IsMono)
-                request.ServicePoint.ReceiveBufferSize = 16*1024;
+                servicePoint.ReceiveBufferSize = 16*1024;
 
             var timeoutInMilliseconds = Math.Max(1, (int)timeout.TotalMilliseconds);
             request.Timeout = timeoutInMilliseconds;
             request.ReadWriteTimeout = timeoutInMilliseconds;
+
+            if (settings.ClientCertificates != null)
+            {
+                foreach (var certificate in settings.ClientCertificates)
+                    request.ClientCertificates.Add(certificate);
+            }
         }
     }
 }

@@ -23,6 +23,8 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests
         {
             var request = WebRequest.CreateHttp("http://kontur.ru/");
 
+            WebRequestHeadersHacker.TryUnlockRestrictedHeaders(request, log).Should().BeTrue();
+
             Action unsafeAssignment = () =>
             {
                 request.Headers["Accept"] = "123";
