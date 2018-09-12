@@ -1,7 +1,6 @@
 ﻿using System;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
-using Vostok.Commons.Helpers.Conversions;
 
 namespace Vostok.ClusterClient.Transport.Webrequest
 {
@@ -13,11 +12,11 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
         public int ConnectionAttempts { get; set; } = 2;
 
-        public TimeSpan? ConnectionTimeout { get; set; } = 750.Milliseconds();
+        public TimeSpan? ConnectionTimeout { get; set; } = TimeSpan.FromMilliseconds(750);
 
-        public TimeSpan ConnectionIdleTimeout { get; set; } = 2.Minutes();
+        public TimeSpan ConnectionIdleTimeout { get; set; } = TimeSpan.FromMinutes(2);
 
-        public TimeSpan RequestAbortTimeout { get; set; } = 250.Milliseconds();
+        public TimeSpan RequestAbortTimeout { get; set; } = TimeSpan.FromMilliseconds(250);
 
         public IWebProxy Proxy { get; set; } = null;
 
@@ -33,9 +32,9 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
         public bool TcpKeepAliveEnabled { get; set; } = false;
 
-        public TimeSpan TcpKeepAliveTime { get; set; } = 3.Seconds();
+        public TimeSpan TcpKeepAliveTime { get; set; } = TimeSpan.FromSeconds(3);
 
-        public TimeSpan TcpKeepAlivePeriod { get; set; } = 1.Seconds();
+        public TimeSpan TcpKeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(1);
 
         public bool ArpCacheWarmupEnabled { get; set; } = false;
 

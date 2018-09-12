@@ -5,13 +5,12 @@ using System.Net;
 using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Threading.Tasks;
-using Vostok.Commons.Helpers.Conversions;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.ArpCache
 {
     internal static class NetworkHelper
     {
-        private static readonly TimeSpan CacheTTL = 1.Days();
+        private static readonly TimeSpan CacheTTL = TimeSpan.FromDays(1);
 
         public static volatile List<IPAddress> GatewayAddresses;
 

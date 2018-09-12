@@ -4,7 +4,6 @@ using System.Linq;
 using System.Net;
 using System.Runtime.InteropServices;
 using System.Threading.Tasks;
-using Vostok.Commons.Helpers.Conversions;
 using Vostok.Commons.Helpers.Extensions;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.ArpCache
@@ -21,9 +20,9 @@ namespace Vostok.ClusterClient.Transport.Webrequest.ArpCache
         {
             ArpRequestsWork = true;
             ActiveAddresses = new ConcurrentDictionary<IPAddress, DateTime>();
-            ActiveAddressesTtl = 1.Days();
+            ActiveAddressesTtl = TimeSpan.FromDays(1);
             ActiveAddressesTtlHalf = ActiveAddressesTtl.Divide(2);
-            WarmupPeriod = 15.Seconds();
+            WarmupPeriod = TimeSpan.FromSeconds(15);
 
             WarmupAndSchedule();
         }

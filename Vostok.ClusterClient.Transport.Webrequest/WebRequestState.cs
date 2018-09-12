@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Diagnostics;
 using System.IO;
 using System.Net;
 using System.Threading;
@@ -8,13 +9,15 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 {
     internal class WebRequestState : IDisposable
     {
-        private readonly TimeBudget timeBudget;
+        private readonly TimeSpan timeout;
+        private readonly Stopwatch stopwatch;
         private int cancellationState;
         private int disposeBarrier;
 
         public WebRequestState(TimeSpan timeout)
         {
-            timeBudget = TimeBudget.StartNew(timeout, TimeSpan.FromMilliseconds(5));
+            this.timeout = timeout;
+            stopwatch = Stopwatch.StartNew();
         }
 
         public HttpWebRequest Request { get; set; }
@@ -31,7 +34,14 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         public MemoryStream BodyStream { get; set; }
         public bool ReturnStreamDirectly { get; set; }
 
-        public TimeSpan TimeRemaining => timeBudget.Remaining();
+        public TimeSpan TimeRemaining
+        {
+            get
+            {
+                var remaining = timeout - stopwatch.Elapsed;
+                return remaining > TimeSpan.Zero ? remaining : TimeSpan.Zero;
+            }
+        }
         public bool RequestCancelled => cancellationState > 0;
 
         public void Reset()

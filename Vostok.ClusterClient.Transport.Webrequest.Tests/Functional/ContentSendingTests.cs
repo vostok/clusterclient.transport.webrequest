@@ -5,7 +5,6 @@ using NUnit.Framework;
 using Vostok.ClusterClient.Core.Model;
 using Vostok.ClusterClient.Transport.Webrequest.Tests.Functional.Helpers;
 using Vostok.Commons.Threading;
-using Vostok.Commons.Helpers.Conversions;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
 {
@@ -21,7 +20,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         {
             using (var server = TestServer.StartNew(ctx => ctx.Response.StatusCode = 200))
             {
-                var content = ThreadSafeRandom.NextBytes((long) size.Bytes());
+                var content = ThreadSafeRandom.NextBytes(size);
 
                 var request = Request.Put(server.Url).WithContent(content);
 
@@ -41,7 +40,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         {
             using (var server = TestServer.StartNew(ctx => ctx.Response.StatusCode = 200))
             {
-                var content = ThreadSafeRandom.NextBytes((long) size.Bytes());
+                var content = ThreadSafeRandom.NextBytes(size);
 
                 var contentStream = new MemoryStream();
 
@@ -69,7 +68,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         {
             using (var server = TestServer.StartNew(ctx => ctx.Response.StatusCode = 200))
             {
-                var content = ThreadSafeRandom.NextBytes((long) size.Bytes());
+                var content = ThreadSafeRandom.NextBytes(size);
 
                 var contentStream = new MemoryStream(content, false);
 
@@ -88,7 +87,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
             {
                 server.BufferRequestBody = false;
 
-                var requestBodySize = 3.Gigabytes().Bytes;
+                var requestBodySize = 3 * Constants.Gigabytes;
 
                 var request = Request.Put(server.Url).WithContent(new EndlessZerosStream(), requestBodySize);
 
