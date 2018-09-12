@@ -73,7 +73,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [Test]
         public void Should_return_http_517_when_response_body_size_is_larger_than_configured_limit_when_content_length_is_known()
         {
-            transport.Settings.MaxResponseBodySize = 1.Kilobytes();
+            transport.Settings.MaxResponseBodySize = 1.Kilobytes().Bytes;
 
             var content = ThreadSafeRandom.NextBytes((long) (1.Kilobytes() + 1.Bytes()));
 
@@ -95,7 +95,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         [Test]
         public void Should_return_http_517_when_response_body_size_is_larger_than_configured_limit_when_content_length_is_unknown()
         {
-            transport.Settings.MaxResponseBodySize = 1.Kilobytes();
+            transport.Settings.MaxResponseBodySize = 1.Kilobytes().Bytes;
 
             var content = ThreadSafeRandom.NextBytes((long) (1.Kilobytes() + 1.Bytes()));
 

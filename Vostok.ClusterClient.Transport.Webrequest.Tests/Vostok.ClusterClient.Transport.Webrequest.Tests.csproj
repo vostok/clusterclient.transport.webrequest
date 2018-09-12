@@ -40,7 +40,8 @@
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>
+  <ItemGroup>  
+    <Compile Include="..\..\vostok.commons.helpers\Vostok.Commons.Helpers\Conversions\DataSizeConversionExtensions.cs" Link="Commons\DataSizeConversionExtensions.cs" />
     <Compile Include="..\..\vostok.commons.threading\Vostok.Commons.Threading\ThreadSafeRandom.cs" Link="Threading\ThreadSafeRandom.cs" />
   </ItemGroup>
   

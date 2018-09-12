@@ -315,7 +315,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         private bool ResponseBodyIsTooLarge(WebRequestState state)
         {
             var size = Math.Max(state.Response.ContentLength, state.BodyStream?.Length ?? 0L);
-            var limit = Settings.MaxResponseBodySize?.Bytes ?? long.MaxValue;
+            var limit = Settings.MaxResponseBodySize ?? long.MaxValue;
 
             if (size > limit)
             {

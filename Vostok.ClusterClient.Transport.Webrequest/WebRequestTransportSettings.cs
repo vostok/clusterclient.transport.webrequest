@@ -2,7 +2,6 @@
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 using Vostok.Commons.Helpers.Conversions;
-using Vostok.Commons.Primitives;
 
 namespace Vostok.ClusterClient.Transport.Webrequest
 {
@@ -24,7 +23,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
         public int MaxConnectionsPerEndpoint = 10 * 1000;
 
-        public DataSize? MaxResponseBodySize { get; set; } = null;
+        public long? MaxResponseBodySize { get; set; } = null;
 
         public Predicate<long?> UseResponseStreaming { get; set; } = _ => false;
 
