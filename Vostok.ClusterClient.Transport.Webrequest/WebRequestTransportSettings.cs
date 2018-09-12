@@ -20,7 +20,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
         public IWebProxy Proxy { get; set; } = null;
 
-        public int MaxConnectionsPerEndpoint = 10 * 1000;
+        public int MaxConnectionsPerEndpoint { get; set; } = 10 * 1000;
 
         public long? MaxResponseBodySize { get; set; } = null;
 
