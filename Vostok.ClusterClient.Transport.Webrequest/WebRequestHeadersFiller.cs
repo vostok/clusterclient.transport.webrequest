@@ -130,6 +130,12 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                 webRequest.UserAgent = header.Value;
                 return true;
             }
+            
+            if (header.Name.Equals(HeaderNames.Date))
+            {
+                webRequest.Date = DateTime.Parse(header.Value);
+                return true;
+            }
 
             return false;
         }
