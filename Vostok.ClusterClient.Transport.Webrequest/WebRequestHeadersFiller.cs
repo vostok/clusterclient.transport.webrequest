@@ -25,10 +25,8 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             }
 
             SetContentLengthHeader(request, webRequest);
-            SetRequestTimeoutHeader(webRequest, timeout);
 
             TrySetHostExplicitly(request, webRequest);
-            TrySetClientIdentityHeader(request, webRequest);
         }
 
         private static void AssignHeadersDirectly(Headers headers, HttpWebRequest webRequest)
@@ -67,24 +65,11 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             }
         }
 
-        private static void SetRequestTimeoutHeader(HttpWebRequest webRequest, TimeSpan timeout)
-        {
-            webRequest.Headers.Set(HeaderNames.RequestTimeout, timeout.Ticks.ToString());
-        }
-
         private static void TrySetHostExplicitly(Request request, HttpWebRequest webRequest)
         {
             var host = request.Headers?[HeaderNames.Host];
             if (host != null)
                 webRequest.Host = host;
-        }
-
-        private static void TrySetClientIdentityHeader(Request request, HttpWebRequest webRequest)
-        {
-            if (request.Headers?[HeaderNames.ClientApplication] == null)
-            {
-                webRequest.Headers.Set(HeaderNames.ClientApplication, UrlEncodingHelper.UrlEncode(HttpClientIdentity.Get()));
-            }
         }
 
         private static bool TryHandleSpecialHeaderWithProperty(HttpWebRequest webRequest, Header header)
