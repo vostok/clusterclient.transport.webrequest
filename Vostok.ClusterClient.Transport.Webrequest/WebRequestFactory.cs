@@ -18,7 +18,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             if (settings.FixNonAsciiHeaders)
                 request = NonAsciiHeadersFixer.Fix(request);
 
-            WebRequestHeadersFiller.Fill(request, webRequest, timeout, log);
+            WebRequestHeadersFiller.Fill(request, webRequest, log);
 
             return webRequest;
         }

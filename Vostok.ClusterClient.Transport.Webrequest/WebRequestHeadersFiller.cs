@@ -2,14 +2,13 @@
 using System.Net;
 using System.Net.Http.Headers;
 using Vostok.ClusterClient.Core.Model;
-using Vostok.ClusterClient.Core.Net;
 using Vostok.Logging.Abstractions;
 
 namespace Vostok.ClusterClient.Transport.Webrequest
 {
     internal static class WebRequestHeadersFiller
     {
-        public static void Fill(Request request, HttpWebRequest webRequest, TimeSpan timeout, ILog log)
+        public static void Fill(Request request, HttpWebRequest webRequest, ILog log)
         {
             if (request.Headers != null)
             {
