@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 using Vostok.ClusterClient.Core.Model;
 using Vostok.ClusterClient.Core.Transport;
 using Vostok.ClusterClient.Transport.Webrequest.Pool;
-using Vostok.Commons.Helpers.Extensions;
+using Vostok.Commons.Time;
 using Vostok.Logging.Abstractions;
 
 // ReSharper disable MethodSupportsCancellation

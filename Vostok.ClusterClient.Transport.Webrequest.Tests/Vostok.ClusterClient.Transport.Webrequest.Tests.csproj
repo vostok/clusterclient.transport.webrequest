@@ -35,9 +35,6 @@
     <Reference Include="Vostok.Logging.ConsoleLog">
       <HintPath>..\..\vostok.logging.console\Vostok.Logging.ConsoleLog\bin\Release\netstandard2.0\Vostok.Logging.ConsoleLog.dll</HintPath>
     </Reference>
-    <Reference Include="Vostok.Commons.Primitives">
-      <HintPath>..\..\vostok.commons.primitives\Vostok.Commons.Primitives\bin\Release\netstandard2.0\Vostok.Commons.Primitives.dll</HintPath>
-    </Reference>
   </ItemGroup>
 
   <ItemGroup>  
