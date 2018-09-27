@@ -18,7 +18,7 @@ full-build > notests:
   deps:
     - vostok.logging.console
     - vostok.logging.context
-    - vostok.clusterclient.rtansport.tests
+    - vostok.clusterclient.transport.tests
   build:
     target: Vostok.ClusterClient.Transport.Webrequest.sln
     configuration: Release
