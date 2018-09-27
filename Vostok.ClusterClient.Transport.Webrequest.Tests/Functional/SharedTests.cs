@@ -7,7 +7,7 @@ using Vostok.Logging.Console;
 namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
 {
     public class Config : ITransportTestConfig
-    {
+    { 
         public ILog CreateLog() => new ConsoleLog();
 
         public ITransport CreateTransport(TestTransportSettings settings, ILog log)
