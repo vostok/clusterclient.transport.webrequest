@@ -14,7 +14,7 @@
     <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\..\vostok.clusterclient.transport.tests\Vostok.ClusterClient.Transport.Tests\Vostok.ClusterClient.Transport.Tests.csproj" />
+    <ProjectReference Include="..\..\vostok.clusterclient.transport.tests\Vostok.ClusterClient.Transport.Tests.Shared\Vostok.ClusterClient.Transport.Tests.Shared.csproj" />
     <ProjectReference Include="..\Vostok.ClusterClient.Transport.Webrequest\Vostok.ClusterClient.Transport.Webrequest.csproj" />
   </ItemGroup>
   <ItemGroup>
