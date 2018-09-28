@@ -15,10 +15,6 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <PackageReleaseNotes>TODO</PackageReleaseNotes>
-  </PropertyGroup>
-
-  <PropertyGroup>
     <Title>Vostok ClusterClient transport webrequest library</Title>
     <Description>ClusterClient transport webrequest library for microservice toolkit http://vostok.tools/</Description>
   </PropertyGroup>
