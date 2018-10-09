@@ -3,7 +3,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Vostok.ClusterClient.Core.Model;
 using Vostok.ClusterClient.Transport.Webrequest.Tests.Functional.Helpers;
-using Vostok.Commons.Helpers.Conversions;
+using Vostok.Commons.Time;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
 {

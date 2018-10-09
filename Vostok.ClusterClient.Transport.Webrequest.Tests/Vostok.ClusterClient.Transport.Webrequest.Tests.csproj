@@ -23,20 +23,14 @@
     <Reference Include="Vostok.ClusterClient.Core">
       <HintPath>..\Vostok.ClusterClient.Transport.Webrequest\bin\Debug\netstandard2.0\Vostok.ClusterClient.Core.dll</HintPath>
     </Reference>
-    <!--<Reference Include="Vostok.Context">
-      <HintPath>..\..\vostok.context\Vostok.Context\bin\Release\netstandard2.0\Vostok.Context.dll</HintPath>
-    </Reference>-->
     <Reference Include="Vostok.Logging.Abstractions">
       <HintPath>..\..\vostok.logging.abstractions\Vostok.Logging.Abstractions\bin\Release\netstandard2.0\Vostok.Logging.Abstractions.dll</HintPath>
-    </Reference>
-    <Reference Include="Vostok.Logging.ConsoleLog">
-      <HintPath>..\..\vostok.logging.console\Vostok.Logging.ConsoleLog\bin\Release\netstandard2.0\Vostok.Logging.ConsoleLog.dll</HintPath>
     </Reference>
     <Reference Include="Vostok.Logging.Context">
       <HintPath>..\..\vostok.logging.context\Vostok.Logging.Context\bin\Release\netstandard2.0\Vostok.Logging.Context.dll</HintPath>
     </Reference>
-    <Reference Include="Vostok.Logging.ConsoleLog">
-      <HintPath>..\..\vostok.logging.console\Vostok.Logging.ConsoleLog\bin\Release\netstandard2.0\Vostok.Logging.ConsoleLog.dll</HintPath>
+    <Reference Include="Vostok.Logging.Console">
+      <HintPath>..\..\vostok.logging.console\Vostok.Logging.Console\bin\Release\netstandard2.0\Vostok.Logging.Console.dll</HintPath>
     </Reference>
     <Reference Include="Vostok.Commons.Primitives">
       <HintPath>..\..\vostok.commons.primitives\Vostok.Commons.Primitives\bin\Release\netstandard2.0\Vostok.Commons.Primitives.dll</HintPath>

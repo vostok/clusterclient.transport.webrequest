@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
-using Vostok.Commons.Helpers.Conversions;
 using Vostok.Commons.Primitives;
+using Vostok.Commons.Time;
 
 namespace Vostok.ClusterClient.Transport.Webrequest
 {

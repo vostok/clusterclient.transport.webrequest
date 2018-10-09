@@ -1,6 +1,6 @@
 ﻿using System.Net;
-using FluentAssertions.Extensions;
 using NUnit.Framework;
+using Vostok.Commons.Time;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.Tests
 {

@@ -2,7 +2,7 @@
 using System.IO;
 using System.Net;
 using System.Threading;
-using Vostok.Commons.Helpers;
+using Vostok.Commons.Time;
 
 namespace Vostok.ClusterClient.Transport.Webrequest
 {
@@ -31,7 +31,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         public MemoryStream BodyStream { get; set; }
         public bool ReturnStreamDirectly { get; set; }
 
-        public TimeSpan TimeRemaining => timeBudget.Remaining();
+        public TimeSpan TimeRemaining => timeBudget.Remaining;
         public bool RequestCancelled => cancellationState > 0;
 
         public void Reset()
