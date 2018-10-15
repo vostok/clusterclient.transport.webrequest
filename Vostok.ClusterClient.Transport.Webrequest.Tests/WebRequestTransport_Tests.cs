@@ -4,7 +4,7 @@ using Vostok.Clusterclient.Core.Transport;
 using Vostok.Clusterclient.Transport.Webrequest;
 using Vostok.Logging.Console;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Tests
+namespace Vostok.Clusterclient.Transport.Webrequest.Tests
 {
     [TestFixture]
     internal class WebRequestTransport_Tests

@@ -1,4 +1,4 @@
-namespace Vostok.ClusterClient.Transport.Webrequest.Tests
+namespace Vostok.Clusterclient.Transport.Webrequest.Tests
 {
     internal static class Constants
     {

@@ -23,7 +23,7 @@
   <PropertyGroup>
     <PackageProjectUrl>https://github.com/vostok/clusterclient.transport.webrequest</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/vostok/clusterclient.transport.webrequest/blob/master/LICENSE</PackageLicenseUrl>
-    <PackageTags>vostok vostok.clusterclient.transport.webrequest</PackageTags>
+    <PackageTags>vostok vostok.clusterclient</PackageTags>
     <RepositoryUrl>https://github.com/vostok/clusterclient.transport.webrequest</RepositoryUrl>
   </PropertyGroup>
 

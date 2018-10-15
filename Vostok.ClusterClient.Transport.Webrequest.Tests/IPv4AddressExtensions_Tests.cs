@@ -5,7 +5,7 @@ using FluentAssertions;
 using NUnit.Framework;
 using Vostok.Clusterclient.Transport.Webrequest.ArpCache;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Tests
+namespace Vostok.Clusterclient.Transport.Webrequest.Tests
 {
     [TestFixture]
     internal class IPv4AddressExtensions_Tests

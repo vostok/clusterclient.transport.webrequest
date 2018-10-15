@@ -9,7 +9,7 @@ using Vostok.Clusterclient.Transport.Webrequest.Utilities;
 using Vostok.Logging.Abstractions;
 using Vostok.Logging.Console;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
+namespace Vostok.Clusterclient.Transport.Webrequest.Tests.Functional
 {
     [TestFixture]
     internal class TransportTestsBase

@@ -5,7 +5,7 @@ using Vostok.Clusterclient.Transport.Webrequest;
 using Vostok.Logging.Abstractions;
 using Vostok.Logging.Console;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
+namespace Vostok.Clusterclient.Transport.Webrequest.Tests.Functional
 {
     public class Config : ITransportTestConfig
     { 

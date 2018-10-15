@@ -6,7 +6,7 @@ using Vostok.Clusterclient.Transport.Webrequest;
 using Vostok.Logging.Abstractions;
 using Vostok.Logging.Console;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Tests
+namespace Vostok.Clusterclient.Transport.Webrequest.Tests
 {
     [TestFixture]
     internal class WebRequestHeadersHacker_Tests
