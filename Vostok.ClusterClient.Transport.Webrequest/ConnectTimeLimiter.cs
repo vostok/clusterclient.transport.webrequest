@@ -65,15 +65,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         {
             var message = $"Connection failure. Target = {request.Url.Authority}. Attempt = {attempt}. Status = {error.Status}.";
             var exception = error.InnerException ?? error;
-
-            if (attempt == settings.ConnectionAttempts)
-            {
-                log.Error(message, exception);
-            }
-            else
-            {
-                log.Warn(message, exception);
-            }
+            log.Warn(message, exception);
         }
     }
 }

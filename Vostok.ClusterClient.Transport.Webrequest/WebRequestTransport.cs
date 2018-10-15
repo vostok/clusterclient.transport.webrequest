@@ -101,76 +101,69 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         private async Task<Response> SendInternalAsync(Request request, WebRequestState state, TimeSpan? connectionTimeout, CancellationToken cancellationToken)
         {
             using (cancellationToken.Register(state.CancelRequest))
+            using (state)
             {
-                for (state.ConnectionAttempt = 1; state.ConnectionAttempt <= Settings.ConnectionAttempts; state.ConnectionAttempt++)
+                if (state.RequestCancelled)
+                    return new Response(ResponseCode.Canceled);
+
+                state.Reset();
+                state.Request = WebRequestFactory.Create(request, state.TimeRemaining, Settings, log);
+
+                HttpActionStatus status;
+
+                // (iloktionov): Шаг 1 - отправить тело запроса, если оно имеется.
+                if (state.RequestCancelled)
+                    return new Response(ResponseCode.Canceled);
+
+                if (request.HasBody)
                 {
-                    using (state)
-                    {
-                        if (state.RequestCancelled)
-                            return new Response(ResponseCode.Canceled);
+                    status = await connectTimeLimiter.LimitConnectTime(SendRequestBodyAsync(request, state), request, state, connectionTimeout).ConfigureAwait(false);
 
-                        state.Reset();
-                        state.Request = WebRequestFactory.Create(request, state.TimeRemaining, Settings, log);
+                    if (status == HttpActionStatus.ConnectionFailure)
+                        return Responses.ConnectFailure;
 
-                        HttpActionStatus status;
-
-                        // (iloktionov): Шаг 1 - отправить тело запроса, если оно имеется.
-                        if (state.RequestCancelled)
-                            return new Response(ResponseCode.Canceled);
-
-                        if (request.HasBody)
-                        {
-                            status = await connectTimeLimiter.LimitConnectTime(SendRequestBodyAsync(request, state), request, state, connectionTimeout).ConfigureAwait(false);
-
-                            if (status == HttpActionStatus.ConnectionFailure)
-                                continue;
-
-                            if (status != HttpActionStatus.Success)
-                                return ResponseFactory.BuildFailureResponse(status, state);
-                        }
-
-                        // (iloktionov): Шаг 2 - получить ответ от сервера.
-                        if (state.RequestCancelled)
-                            return new Response(ResponseCode.Canceled);
-
-                        status = request.HasBody
-                            ? await GetResponseAsync(request, state).ConfigureAwait(false)
-                            : await connectTimeLimiter.LimitConnectTime(GetResponseAsync(request, state), request, state, connectionTimeout).ConfigureAwait(false);
-
-                        if (status == HttpActionStatus.ConnectionFailure)
-                            continue;
-
-                        if (status != HttpActionStatus.Success)
-                            return ResponseFactory.BuildFailureResponse(status, state);
-
-                        // (iloktionov): Шаг 3 - скачать тело ответа, если оно имеется.
-                        if (!NeedToReadResponseBody(request, state))
-                            return ResponseFactory.BuildSuccessResponse(state);
-
-                        if (ResponseBodyIsTooLarge(state))
-                        {
-                            state.CancelRequestAttempt();
-                            return ResponseFactory.BuildResponse(ResponseCode.InsufficientStorage, state);
-                        }
-
-                        if (state.RequestCancelled)
-                            return new Response(ResponseCode.Canceled);
-
-                        if (NeedToStreamResponseBody(state))
-                        {
-                            state.ReturnStreamDirectly = true;
-                            state.PreventNextDispose();
-                            return ResponseFactory.BuildSuccessResponse(state);
-                        }
-
-                        status = await ReadResponseBodyAsync(request, state).ConfigureAwait(false);
-                        return status == HttpActionStatus.Success
-                            ? ResponseFactory.BuildSuccessResponse(state)
-                            : ResponseFactory.BuildFailureResponse(status, state);
-                    }
+                    if (status != HttpActionStatus.Success)
+                        return ResponseFactory.BuildFailureResponse(status, state);
                 }
 
-                return new Response(ResponseCode.ConnectFailure);
+                // (iloktionov): Шаг 2 - получить ответ от сервера.
+                if (state.RequestCancelled)
+                    return new Response(ResponseCode.Canceled);
+
+                status = request.HasBody
+                    ? await GetResponseAsync(request, state).ConfigureAwait(false)
+                    : await connectTimeLimiter.LimitConnectTime(GetResponseAsync(request, state), request, state, connectionTimeout).ConfigureAwait(false);
+
+                if (status == HttpActionStatus.ConnectionFailure)
+                    return Responses.ConnectFailure;
+
+                if (status != HttpActionStatus.Success)
+                    return ResponseFactory.BuildFailureResponse(status, state);
+
+                // (iloktionov): Шаг 3 - скачать тело ответа, если оно имеется.
+                if (!NeedToReadResponseBody(request, state))
+                    return ResponseFactory.BuildSuccessResponse(state);
+
+                if (ResponseBodyIsTooLarge(state))
+                {
+                    state.CancelRequestAttempt();
+                    return ResponseFactory.BuildResponse(ResponseCode.InsufficientStorage, state);
+                }
+
+                if (state.RequestCancelled)
+                    return new Response(ResponseCode.Canceled);
+
+                if (NeedToStreamResponseBody(state))
+                {
+                    state.ReturnStreamDirectly = true;
+                    state.PreventNextDispose();
+                    return ResponseFactory.BuildSuccessResponse(state);
+                }
+
+                status = await ReadResponseBodyAsync(request, state).ConfigureAwait(false);
+                return status == HttpActionStatus.Success
+                    ? ResponseFactory.BuildSuccessResponse(state)
+                    : ResponseFactory.BuildFailureResponse(status, state);
             }
         }
 
@@ -455,17 +448,9 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         private void LogConnectionFailure(Request request, WebException error, int attempt)
         {
-            var message = $"Connection failure. Target = {request.Url.Authority}. Attempt = {attempt}/{Settings.ConnectionAttempts}. Status = {error.Status}.";
+            var message = $"Connection failure. Target = {request.Url.Authority}. Status = {error.Status}.";
             var exception = error.InnerException ?? error;
-
-            if (attempt == Settings.ConnectionAttempts)
-            {
-                log.Error(message, exception);
-            }
-            else
-            {
-                log.Warn(message, exception);
-            }
+            log.Warn(exception, message);
         }
 
         private void LogWebException(WebException error)

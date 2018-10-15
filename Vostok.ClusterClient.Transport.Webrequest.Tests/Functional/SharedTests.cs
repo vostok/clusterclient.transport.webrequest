@@ -18,7 +18,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest.Tests.Functional
                 UseResponseStreaming = settings.UseResponseStreaming,
                 Proxy = settings.Proxy,
                 BufferFactory = settings.BufferFactory,
-                ConnectionAttempts = settings.ConnectionAttempts,
                 AllowAutoRedirect = settings.AllowAutoRedirect,
                 MaxResponseBodySize = settings.MaxResponseBodySize,
                 MaxConnectionsPerEndpoint = settings.MaxConnectionsPerEndpoint
@@ -29,7 +28,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest.Tests.Functional
         public TestTransportSettings CreateDefaultSettings() => new TestTransportSettings
         {
             MaxConnectionsPerEndpoint = 10 * 1000,
-            ConnectionAttempts = 2,
             BufferFactory = size => new byte[size],
             UseResponseStreaming = _ => false
         };
