@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Threading;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Pool
+namespace Vostok.Clusterclient.Transport.Webrequest.Pool
 {
     public class Pool<T> : IPool<T>
         where T : class

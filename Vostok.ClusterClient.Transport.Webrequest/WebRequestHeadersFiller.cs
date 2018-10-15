@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Net;
 using System.Net.Http.Headers;
-using Vostok.ClusterClient.Core.Model;
+using Vostok.Clusterclient.Core.Model;
 using Vostok.Logging.Abstractions;
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     internal static class WebRequestHeadersFiller
     {

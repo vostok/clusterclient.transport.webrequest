@@ -1,7 +1,7 @@
 ﻿using System.IO;
-using Vostok.ClusterClient.Core.Model;
+using Vostok.Clusterclient.Core.Model;
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     internal static class ResponseFactory
     {

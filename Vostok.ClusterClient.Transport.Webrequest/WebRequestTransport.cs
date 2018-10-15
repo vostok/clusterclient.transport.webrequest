@@ -3,15 +3,15 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Vostok.ClusterClient.Core.Model;
-using Vostok.ClusterClient.Core.Transport;
-using Vostok.ClusterClient.Transport.Webrequest.Pool;
+using Vostok.Clusterclient.Core.Model;
+using Vostok.Clusterclient.Core.Transport;
+using Vostok.Clusterclient.Transport.Webrequest.Pool;
 using Vostok.Commons.Time;
 using Vostok.Logging.Abstractions;
 
 // ReSharper disable MethodSupportsCancellation
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     /// <summary>
     /// <para>Represents an <see cref="ITransport"/> implementation which uses <see cref="HttpWebRequest"/> to send requests to replicas.</para>
@@ -49,7 +49,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             TransportCapabilities.RequestStreaming |
             TransportCapabilities.ResponseStreaming;
 
-        public async Task<Response> SendAsync(Request request, TimeSpan timeout, CancellationToken cancellationToken)
+        public async Task<Response> SendAsync(Request request, TimeSpan? connectionTimeout, TimeSpan timeout, CancellationToken cancellationToken)
         {
             if (timeout.TotalMilliseconds < 1)
             {
@@ -62,7 +62,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             using (var timeoutCancellation = new CancellationTokenSource())
             {
                 var timeoutTask = Task.Delay(state.TimeRemaining, timeoutCancellation.Token);
-                var senderTask = SendInternalAsync(request, state, cancellationToken);
+                var senderTask = SendInternalAsync(request, state, connectionTimeout, cancellationToken);
                 var completedTask = await Task.WhenAny(timeoutTask, senderTask).ConfigureAwait(false);
                 if (completedTask is Task<Response> taskWithResponse)
                 {
@@ -98,7 +98,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             }
         }
 
-        private async Task<Response> SendInternalAsync(Request request, WebRequestState state, CancellationToken cancellationToken)
+        private async Task<Response> SendInternalAsync(Request request, WebRequestState state, TimeSpan? connectionTimeout, CancellationToken cancellationToken)
         {
             using (cancellationToken.Register(state.CancelRequest))
             {
@@ -120,7 +120,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
                         if (request.HasBody)
                         {
-                            status = await connectTimeLimiter.LimitConnectTime(SendRequestBodyAsync(request, state), request, state, Settings.ConnectionTimeout).ConfigureAwait(false);
+                            status = await connectTimeLimiter.LimitConnectTime(SendRequestBodyAsync(request, state), request, state, connectionTimeout).ConfigureAwait(false);
 
                             if (status == HttpActionStatus.ConnectionFailure)
                                 continue;
@@ -135,7 +135,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
                         status = request.HasBody
                             ? await GetResponseAsync(request, state).ConfigureAwait(false)
-                            : await connectTimeLimiter.LimitConnectTime(GetResponseAsync(request, state), request, state, Settings.ConnectionTimeout).ConfigureAwait(false);
+                            : await connectTimeLimiter.LimitConnectTime(GetResponseAsync(request, state), request, state, connectionTimeout).ConfigureAwait(false);
 
                         if (status == HttpActionStatus.ConnectionFailure)
                             continue;

@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Net;
 using System.Net.Security;
-using Vostok.ClusterClient.Transport.Webrequest.ArpCache;
+using Vostok.Clusterclient.Transport.Webrequest.ArpCache;
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     internal static class WebRequestTuner
     {

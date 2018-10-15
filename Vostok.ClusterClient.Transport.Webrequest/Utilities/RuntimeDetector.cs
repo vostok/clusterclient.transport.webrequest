@@ -2,7 +2,7 @@ using System;
 using System.IO;
 using System.Runtime.InteropServices;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Utilities
+namespace Vostok.Clusterclient.Transport.Webrequest.Utilities
 {
     internal static class RuntimeDetector
     {

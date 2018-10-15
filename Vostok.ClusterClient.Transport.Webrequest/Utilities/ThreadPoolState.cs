@@ -1,4 +1,4 @@
-namespace Vostok.ClusterClient.Transport.Webrequest.Utilities
+namespace Vostok.Clusterclient.Transport.Webrequest.Utilities
 {
     internal struct ThreadPoolState
     {

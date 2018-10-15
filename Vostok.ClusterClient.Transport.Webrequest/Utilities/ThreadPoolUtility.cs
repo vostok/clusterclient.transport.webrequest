@@ -1,7 +1,7 @@
 using System;
 using System.Threading;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Utilities
+namespace Vostok.Clusterclient.Transport.Webrequest.Utilities
 {
     internal static class ThreadPoolUtility
     {

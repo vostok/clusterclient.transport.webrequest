@@ -1,7 +1,7 @@
 ﻿using System.Text;
-using Vostok.ClusterClient.Core.Model;
+using Vostok.Clusterclient.Core.Model;
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     // (iloktionov): A dirty hack that exploits header serialization implementation inside HttpWebRequest
     // (iloktionov): (it just directly casts every character to byte, so we can cook a longer

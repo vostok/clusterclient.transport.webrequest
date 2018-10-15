@@ -1,4 +1,4 @@
-﻿namespace Vostok.ClusterClient.Transport.Webrequest
+﻿namespace Vostok.Clusterclient.Transport.Webrequest
 {
     internal enum HttpActionStatus
     {

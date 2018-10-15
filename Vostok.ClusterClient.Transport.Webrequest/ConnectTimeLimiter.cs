@@ -2,11 +2,11 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Vostok.ClusterClient.Core.Model;
+using Vostok.Clusterclient.Core.Model;
 using Vostok.Commons.Time;
 using Vostok.Logging.Abstractions;
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     internal class ConnectTimeLimiter
     {

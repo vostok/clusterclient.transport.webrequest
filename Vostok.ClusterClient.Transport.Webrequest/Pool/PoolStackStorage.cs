@@ -1,6 +1,6 @@
 ﻿using System.Collections.Concurrent;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Pool
+namespace Vostok.Clusterclient.Transport.Webrequest.Pool
 {
     internal class PoolStackStorage<T> : IPoolStorage<T>
     {

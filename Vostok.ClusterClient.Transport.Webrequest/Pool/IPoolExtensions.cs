@@ -1,6 +1,6 @@
 ﻿using System.Collections.Generic;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Pool
+namespace Vostok.Clusterclient.Transport.Webrequest.Pool
 {
     public static class IPoolExtensions
     {

@@ -2,7 +2,7 @@
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     public class WebRequestTransportSettings
     {
@@ -11,8 +11,6 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         public bool FixThreadPoolProblems { get; set; } = true;
 
         public int ConnectionAttempts { get; set; } = 2;
-
-        public TimeSpan? ConnectionTimeout { get; set; } = TimeSpan.FromMilliseconds(750);
 
         public TimeSpan ConnectionIdleTimeout { get; set; } = TimeSpan.FromMinutes(2);
 

@@ -1,6 +1,7 @@
 ﻿using System.Net;
 using FluentAssertions.Extensions;
 using NUnit.Framework;
+using Vostok.Clusterclient.Transport.Webrequest;
 
 namespace Vostok.ClusterClient.Transport.Webrequest.Tests
 {

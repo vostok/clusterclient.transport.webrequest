@@ -1,10 +1,10 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Net;
-using Vostok.ClusterClient.Transport.Webrequest.Utilities;
+using Vostok.Clusterclient.Transport.Webrequest.Utilities;
 using Vostok.Logging.Abstractions;
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     internal static class ConnectTimeoutHelper
     {

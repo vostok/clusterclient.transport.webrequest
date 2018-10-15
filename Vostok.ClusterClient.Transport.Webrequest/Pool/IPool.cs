@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Pool
+namespace Vostok.Clusterclient.Transport.Webrequest.Pool
 {
     public interface IPool<T> : IDisposable
         where T : class

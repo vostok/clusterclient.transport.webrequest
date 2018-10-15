@@ -1,6 +1,6 @@
-﻿using Vostok.ClusterClient.Core;
+﻿using Vostok.Clusterclient.Core;
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     public static class IClusterClientConfigurationExtensions
     {

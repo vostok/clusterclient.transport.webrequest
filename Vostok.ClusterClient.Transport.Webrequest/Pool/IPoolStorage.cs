@@ -1,4 +1,4 @@
-﻿namespace Vostok.ClusterClient.Transport.Webrequest.Pool
+﻿namespace Vostok.Clusterclient.Transport.Webrequest.Pool
 {
     internal interface IPoolStorage<T>
     {
