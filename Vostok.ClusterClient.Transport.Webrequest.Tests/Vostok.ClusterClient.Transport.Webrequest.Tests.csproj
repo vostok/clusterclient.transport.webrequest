@@ -20,7 +20,7 @@
   </ItemGroup>
   <ItemGroup>
     <ProjectReference Include="..\..\vostok.clusterclient.transport.tests\Vostok.ClusterClient.Transport.Tests.Shared\Vostok.ClusterClient.Transport.Tests.Shared.csproj" />
-    <ProjectReference Include="..\Vostok.Clusterclient.Transport.Webrequest\Vostok.Clusterclient.Transport.Webrequest.csproj" />
+    <ProjectReference Include="..\Vostok.ClusterClient.Transport.Webrequest\Vostok.ClusterClient.Transport.Webrequest.csproj" />
   </ItemGroup>
   <ItemGroup>
     <Reference Include="System.Web" Condition="'$(TargetFramework)' == 'net471'" />
