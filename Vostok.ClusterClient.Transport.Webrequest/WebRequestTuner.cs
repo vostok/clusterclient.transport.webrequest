@@ -77,5 +77,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 }
             }
         }
+
+        public static void Touch() { }
     }
 }

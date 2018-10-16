@@ -36,6 +36,8 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
             connectTimeLimiter = new ConnectTimeLimiter(settings, log);
             threadPoolMonitor = ThreadPoolMonitor.Instance;
+            
+            WebRequestTuner.Touch();
         }
 
         public WebRequestTransport(ILog log)
