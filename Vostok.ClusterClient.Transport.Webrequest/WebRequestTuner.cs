@@ -49,7 +49,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
             if (settings.TcpKeepAliveEnabled)
             {
-                servicePoint.SetTcpKeepAlive(true, (int) settings.TcpKeepAliveTime.TotalMilliseconds, (int) settings.TcpKeepAlivePeriod.TotalMilliseconds);
+                servicePoint.SetTcpKeepAlive(true, (int) settings.TcpKeepAliveTime.TotalMilliseconds, (int) settings.TcpKeepAliveInterval.TotalMilliseconds);
             }
 
             if (settings.ArpCacheWarmupEnabled)

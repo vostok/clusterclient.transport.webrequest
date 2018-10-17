@@ -30,7 +30,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         public TimeSpan TcpKeepAliveTime { get; set; } = TimeSpan.FromSeconds(3);
 
-        public TimeSpan TcpKeepAlivePeriod { get; set; } = TimeSpan.FromSeconds(1);
+        public TimeSpan TcpKeepAliveInterval { get; set; } = TimeSpan.FromSeconds(1);
 
         public bool ArpCacheWarmupEnabled { get; set; } = false;
 
