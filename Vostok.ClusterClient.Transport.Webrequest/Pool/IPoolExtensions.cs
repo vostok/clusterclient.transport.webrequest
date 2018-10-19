@@ -2,7 +2,7 @@
 
 namespace Vostok.Clusterclient.Transport.Webrequest.Pool
 {
-    public static class IPoolExtensions
+    internal static class IPoolExtensions
     {
         /// <summary>
         /// Acquires a resource from pool and wraps it into a disposable handle which releases resource on disposal.
@@ -20,7 +20,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest.Pool
                 resources.Add(pool.Acquire());
 
             foreach (var resource in resources)
-                pool.Release(resource);
+                pool.Return(resource);
         }
     }
 }

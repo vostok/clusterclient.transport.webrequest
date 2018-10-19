@@ -2,7 +2,6 @@
 using System.Net;
 using FluentAssertions;
 using NUnit.Framework;
-using Vostok.Clusterclient.Transport.Webrequest;
 using Vostok.Logging.Abstractions;
 using Vostok.Logging.Console;
 

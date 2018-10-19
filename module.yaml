@@ -14,6 +14,7 @@ notests *default:
     - vostok.clusterclient.core@develop
     - vostok.logging.abstractions
     - vostok.commons.time/src
+    - vostok.commons.collections/src
     - vostok.devtools
 
 full-build > notests:

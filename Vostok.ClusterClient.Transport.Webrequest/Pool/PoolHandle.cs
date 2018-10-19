@@ -2,7 +2,7 @@
 
 namespace Vostok.Clusterclient.Transport.Webrequest.Pool
 {
-    public struct PoolHandle<T> : IDisposable
+    internal struct PoolHandle<T> : IDisposable
         where T : class
     {
         private readonly IPool<T> pool;
@@ -15,7 +15,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest.Pool
 
         public T Resource { get; }
 
-        public void Dispose() => pool.Release(Resource);
+        public void Dispose() => pool.Return(Resource);
 
         public static implicit operator T(PoolHandle<T> handle) => handle.Resource;
     }

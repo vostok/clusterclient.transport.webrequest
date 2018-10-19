@@ -1,7 +1,5 @@
-﻿using System;
-using Vostok.Clusterclient.Core.Transport;
+﻿using Vostok.Clusterclient.Core.Transport;
 using Vostok.Clusterclient.Transport.Tests.Shared.Functional;
-using Vostok.Clusterclient.Transport.Webrequest;
 using Vostok.Logging.Abstractions;
 using Vostok.Logging.Console;
 
