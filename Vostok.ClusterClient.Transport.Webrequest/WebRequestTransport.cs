@@ -108,7 +108,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 if (state.RequestCancelled)
                     return new Response(ResponseCode.Canceled);
 
-                state.Reset();
                 state.Request = WebRequestFactory.Create(request, state.TimeRemaining, Settings, log);
 
                 HttpActionStatus status;

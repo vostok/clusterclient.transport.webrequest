@@ -43,18 +43,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         }
         public bool RequestCancelled => cancellationState > 0;
 
-        public void Reset()
-        {
-            Request = null;
-            Response = null;
-            RequestStream = null;
-            ResponseStream = null;
-            BodyStream = null;
-            BodyBuffer = null;
-            BodyBufferLength = 0;
-            ReturnStreamDirectly = false;
-        }
-
         public void CancelRequest()
         {
             Interlocked.Exchange(ref cancellationState, 1);
