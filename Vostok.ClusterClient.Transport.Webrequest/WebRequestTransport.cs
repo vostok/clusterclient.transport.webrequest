@@ -19,10 +19,10 @@ namespace Vostok.Clusterclient.Transport.Webrequest
     /// </summary>
     public class WebRequestTransport : ITransport
     {
-        private const int PreferredReadSize = 16*1024;
+        private const int BufferSize = 16*1024;
         private const int LOHObjectSizeThreshold = 85*1000;
 
-        private static readonly IPool<byte[]> ReadBuffersPool = new Pool<byte[]>(() => new byte[PreferredReadSize]);
+        private static readonly IPool<byte[]> BuffersPool = new Pool<byte[]>(() => new byte[BufferSize]);
 
         private readonly ILog log;
         private readonly ConnectTimeLimiter connectTimeLimiter;
@@ -45,12 +45,14 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         {
         }
 
-        public WebRequestTransportSettings Settings { get; }
+        internal WebRequestTransportSettings Settings { get; }
 
+        /// <inheritdoc />
         public TransportCapabilities Capabilities =>
             TransportCapabilities.RequestStreaming |
             TransportCapabilities.ResponseStreaming;
 
+        /// <inheritdoc />
         public async Task<Response> SendAsync(Request request, TimeSpan? connectionTimeout, TimeSpan timeout, CancellationToken cancellationToken)
         {
             if (timeout.TotalMilliseconds < 1)
@@ -186,9 +188,31 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
             try
             {
-                if (request.Content != null)
+                var content = request.Content;
+                
+                if (content != null)
                 {
-                    await state.RequestStream.WriteAsync(request.Content.Buffer, request.Content.Offset, request.Content.Length).ConfigureAwait(false);
+                    if (content.Length < LOHObjectSizeThreshold)
+                    {
+                        await state.RequestStream
+                            .WriteAsync(content.Buffer, request.Content.Offset, request.Content.Length)
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        using (BuffersPool.AcquireHandle(out var buffer))
+                        {
+                            var index = content.Offset;
+                            var end = content.Offset + content.Length;
+                            while (index < end)
+                            {
+                                var size = Math.Min(buffer.Length, end - index);
+                                Buffer.BlockCopy(content.Buffer, index, buffer, 0, size);
+                                await state.RequestStream.WriteAsync(buffer, 0, size).ConfigureAwait(false);
+                                index += size;
+                            }
+                        }
+                    }
                 }
                 else if (request.StreamContent != null)
                 {
@@ -196,10 +220,8 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     var bytesToSend = request.StreamContent.Length ?? long.MaxValue;
                     var bytesSent = 0L;
 
-                    using (var bufferHandle = ReadBuffersPool.AcquireHandle())
+                    using (BuffersPool.AcquireHandle(out var buffer))
                     {
-                        var buffer = bufferHandle.Resource;
-
                         while (bytesSent < bytesToSend)
                         {
                             var bytesToRead = (int) Math.Min(buffer.Length, bytesToSend - bytesSent);
@@ -336,7 +358,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     {
                         while (totalBytesRead < contentLength)
                         {
-                            var bytesToRead = Math.Min(contentLength - totalBytesRead, PreferredReadSize);
+                            var bytesToRead = Math.Min(contentLength - totalBytesRead, BufferSize);
                             var bytesRead = await state.ResponseStream.ReadAsync(state.BodyBuffer, totalBytesRead, bytesToRead).ConfigureAwait(false);
                             if (bytesRead == 0)
                                 break;
@@ -346,10 +368,8 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     }
                     else
                     {
-                        using (var bufferHandle = ReadBuffersPool.AcquireHandle())
+                        using (var bufferHandle = BuffersPool.AcquireHandle(out var buffer))
                         {
-                            var buffer = bufferHandle.Resource;
-
                             while (totalBytesRead < contentLength)
                             {
                                 var bytesToRead = Math.Min(contentLength - totalBytesRead, buffer.Length);
@@ -373,10 +393,8 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 {
                     state.BodyStream = new MemoryStream();
 
-                    using (var bufferHandle = ReadBuffersPool.AcquireHandle())
+                    using (BuffersPool.AcquireHandle(out var buffer))
                     {
-                        var buffer = bufferHandle.Resource;
-
                         while (true)
                         {
                             var bytesRead = await state.ResponseStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
@@ -444,49 +462,51 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         private void LogRequestTimeout(Request request, TimeSpan timeout)
         {
-            log.Error($"Request timed out. Target = {request.Url.Authority}. Timeout = {timeout.ToPrettyString()}.");
+            log.Error("Request timed out. Target = {Target}. Timeout = {Timeout}.", request.Url.Authority, timeout.ToPrettyString());
         }
 
         private void LogConnectionFailure(Request request, WebException error, int attempt)
         {
-            var message = $"Connection failure. Target = {request.Url.Authority}. Status = {error.Status}.";
-            var exception = error.InnerException ?? error;
-            log.Warn(exception, message);
+            log.Warn(
+                error.InnerException ?? error,
+                "Connection failure. Target = {Target}. Status = {Status}.",
+                request.Url.Authority,
+                error.Status);
         }
 
         private void LogWebException(WebException error)
         {
-            log.Error($"Error in sending request. Status = {error.Status}.", error.InnerException ?? error);
+            log.Error(error.InnerException ?? error, "Error in sending request. Status = {Status}.", error.Status);
         }
 
         private void LogUnknownException(Exception error)
         {
-            log.Error("Unknown error in sending request.", error);
+            log.Error(error, "Unknown error in sending request.");
         }
 
         private void LogSendBodyFailure(Request request, Exception error)
         {
-            log.Error("Error in sending request body to " + request.Url.Authority, error);
+            log.Error(error, "Error in sending request body to {Target}", request.Url.Authority);
         }
 
         private void LogUserStreamFailure(Exception error)
         {
-            log.Error("Failure in reading input stream while sending request body.", error);
+            log.Error(error, "Failure in reading input stream while sending request body.");
         }
 
         private void LogReceiveBodyFailure(Request request, Exception error)
         {
-            log.Error("Error in receiving request body from " + request.Url.Authority, error);
+            log.Error(error, "Error in receiving request body from {Target}", request.Url.Authority);
         }
 
         private void LogFailedToWaitForRequestAbort()
         {
-            log.Warn($"Timed out request was aborted but did not complete in {Settings.RequestAbortTimeout.ToPrettyString()}.");
+            log.Warn("Timed out request was aborted but did not complete in {RequestAbortTimeout}.", Settings.RequestAbortTimeout.ToPrettyString());
         }
 
         private void LogResponseBodyTooLarge(long size, long limit)
         {
-            log.Error($"Response body size {size} is larger than configured limit of {limit} bytes.");
+            log.Error("Response body size {Size} is larger than configured limit of {Limit} bytes.", size, limit);
         }
 
         #endregion
