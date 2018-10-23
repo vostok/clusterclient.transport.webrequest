@@ -4,7 +4,6 @@ using System.Threading.Tasks;
 using FluentAssertions.Extensions;
 using NUnit.Framework;
 using Vostok.Clusterclient.Core.Model;
-using Vostok.Clusterclient.Transport.Tests.Shared.Performance;
 using Vostok.Clusterclient.Transport.Webrequest.Utilities;
 using Vostok.Logging.Abstractions;
 using Vostok.Logging.Console;
