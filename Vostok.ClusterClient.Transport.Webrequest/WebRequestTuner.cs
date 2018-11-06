@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Net;
 using System.Net.Security;
-using Vostok.Clusterclient.Transport.Webrequest.ArpCache;
+using Vostok.Commons.Helpers.Network;
 
 namespace Vostok.Clusterclient.Transport.Webrequest
 {
