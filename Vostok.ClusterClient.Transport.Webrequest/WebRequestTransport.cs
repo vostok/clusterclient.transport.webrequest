@@ -3,15 +3,15 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Vostok.ClusterClient.Core.Model;
-using Vostok.ClusterClient.Core.Transport;
-using Vostok.ClusterClient.Transport.Webrequest.Pool;
+using Vostok.Clusterclient.Core.Model;
+using Vostok.Clusterclient.Core.Transport;
+using Vostok.Clusterclient.Transport.Webrequest.Pool;
 using Vostok.Commons.Time;
 using Vostok.Logging.Abstractions;
 
 // ReSharper disable MethodSupportsCancellation
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     /// <summary>
     /// <para>Represents an <see cref="ITransport"/> implementation which uses <see cref="HttpWebRequest"/> to send requests to replicas.</para>
@@ -19,10 +19,10 @@ namespace Vostok.ClusterClient.Transport.Webrequest
     /// </summary>
     public class WebRequestTransport : ITransport
     {
-        private const int PreferredReadSize = 16*1024;
+        private const int BufferSize = 16*1024;
         private const int LOHObjectSizeThreshold = 85*1000;
 
-        private static readonly Pool<byte[]> ReadBuffersPool = new Pool<byte[]>(() => new byte[PreferredReadSize]);
+        private static readonly IPool<byte[]> BuffersPool = new Pool<byte[]>(() => new byte[BufferSize]);
 
         private readonly ILog log;
         private readonly ConnectTimeLimiter connectTimeLimiter;
@@ -36,9 +36,8 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
             connectTimeLimiter = new ConnectTimeLimiter(settings, log);
             threadPoolMonitor = ThreadPoolMonitor.Instance;
-
-            // (razboynikov): if not initialize in the beginning first of the requests will have differences in settings
-            WebRequestTuner.Init();
+            
+            WebRequestTuner.Touch();
         }
 
         public WebRequestTransport(ILog log)
@@ -46,13 +45,15 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         {
         }
 
-        public WebRequestTransportSettings Settings { get; }
+        internal WebRequestTransportSettings Settings { get; }
 
+        /// <inheritdoc />
         public TransportCapabilities Capabilities =>
             TransportCapabilities.RequestStreaming |
             TransportCapabilities.ResponseStreaming;
 
-        public async Task<Response> SendAsync(Request request, TimeSpan timeout, CancellationToken cancellationToken)
+        /// <inheritdoc />
+        public async Task<Response> SendAsync(Request request, TimeSpan? connectionTimeout, TimeSpan timeout, CancellationToken cancellationToken)
         {
             if (timeout.TotalMilliseconds < 1)
             {
@@ -65,7 +66,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             using (var timeoutCancellation = new CancellationTokenSource())
             {
                 var timeoutTask = Task.Delay(state.TimeRemaining, timeoutCancellation.Token);
-                var senderTask = SendInternalAsync(request, state, cancellationToken);
+                var senderTask = SendInternalAsync(request, state, connectionTimeout, cancellationToken);
                 var completedTask = await Task.WhenAny(timeoutTask, senderTask).ConfigureAwait(false);
                 if (completedTask is Task<Response> taskWithResponse)
                 {
@@ -78,7 +79,9 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                 LogRequestTimeout(request, timeout);
 
                 if (Settings.FixThreadPoolProblems)
+                {
                     threadPoolMonitor.ReportAndFixIfNeeded(log);
+                }
 
                 // (iloktionov): Попытаемся дождаться завершения задания по отправке запроса перед тем, как возвращать результат:
                 var senderTaskContinuation = senderTask.ContinueWith(
@@ -99,79 +102,71 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             }
         }
 
-        private async Task<Response> SendInternalAsync(Request request, WebRequestState state, CancellationToken cancellationToken)
+        private async Task<Response> SendInternalAsync(Request request, WebRequestState state, TimeSpan? connectionTimeout, CancellationToken cancellationToken)
         {
             using (cancellationToken.Register(state.CancelRequest))
+            using (state)
             {
-                for (state.ConnectionAttempt = 1; state.ConnectionAttempt <= Settings.ConnectionAttempts; state.ConnectionAttempt++)
+                if (state.RequestCancelled)
+                    return new Response(ResponseCode.Canceled);
+
+                state.Request = WebRequestFactory.Create(request, state.TimeRemaining, Settings, log);
+
+                HttpActionStatus status;
+
+                // (iloktionov): Шаг 1 - отправить тело запроса, если оно имеется.
+                if (state.RequestCancelled)
+                    return new Response(ResponseCode.Canceled);
+
+                if (request.HasBody)
                 {
-                    using (state)
-                    {
-                        if (state.RequestCancelled)
-                            return new Response(ResponseCode.Canceled);
+                    status = await connectTimeLimiter.LimitConnectTime(SendRequestBodyAsync(request, state), request, state, connectionTimeout).ConfigureAwait(false);
 
-                        state.Reset();
-                        state.Request = WebRequestFactory.Create(request, state.TimeRemaining, Settings, log);
+                    if (status == HttpActionStatus.ConnectionFailure)
+                        return Responses.ConnectFailure;
 
-                        HttpActionStatus status;
-
-                        // (iloktionov): Шаг 1 - отправить тело запроса, если оно имеется.
-                        if (state.RequestCancelled)
-                            return new Response(ResponseCode.Canceled);
-
-                        if (request.HasBody)
-                        {
-                            status = await connectTimeLimiter.LimitConnectTime(SendRequestBodyAsync(request, state), request, state, Settings.ConnectionTimeout).ConfigureAwait(false);
-
-                            if (status == HttpActionStatus.ConnectionFailure)
-                                continue;
-
-                            if (status != HttpActionStatus.Success)
-                                return ResponseFactory.BuildFailureResponse(status, state);
-                        }
-
-                        // (iloktionov): Шаг 2 - получить ответ от сервера.
-                        if (state.RequestCancelled)
-                            return new Response(ResponseCode.Canceled);
-
-                        status = request.HasBody
-                            ? await GetResponseAsync(request, state).ConfigureAwait(false)
-                            : await connectTimeLimiter.LimitConnectTime(GetResponseAsync(request, state), request, state, Settings.ConnectionTimeout).ConfigureAwait(false);
-
-                        if (status == HttpActionStatus.ConnectionFailure)
-                            continue;
-
-                        if (status != HttpActionStatus.Success)
-                            return ResponseFactory.BuildFailureResponse(status, state);
-
-                        // (iloktionov): Шаг 3 - скачать тело ответа, если оно имеется.
-                        if (!NeedToReadResponseBody(request, state))
-                            return ResponseFactory.BuildSuccessResponse(state);
-
-                        if (ResponseBodyIsTooLarge(state))
-                        {
-                            state.CancelRequestAttempt();
-                            return ResponseFactory.BuildResponse(ResponseCode.InsufficientStorage, state);
-                        }
-
-                        if (state.RequestCancelled)
-                            return new Response(ResponseCode.Canceled);
-
-                        if (NeedToStreamResponseBody(state))
-                        {
-                            state.ReturnStreamDirectly = true;
-                            state.PreventNextDispose();
-                            return ResponseFactory.BuildSuccessResponse(state);
-                        }
-
-                        status = await ReadResponseBodyAsync(request, state).ConfigureAwait(false);
-                        return status == HttpActionStatus.Success
-                            ? ResponseFactory.BuildSuccessResponse(state)
-                            : ResponseFactory.BuildFailureResponse(status, state);
-                    }
+                    if (status != HttpActionStatus.Success)
+                        return ResponseFactory.BuildFailureResponse(status, state);
                 }
 
-                return new Response(ResponseCode.ConnectFailure);
+                // (iloktionov): Шаг 2 - получить ответ от сервера.
+                if (state.RequestCancelled)
+                    return new Response(ResponseCode.Canceled);
+
+                status = request.HasBody
+                    ? await GetResponseAsync(request, state).ConfigureAwait(false)
+                    : await connectTimeLimiter.LimitConnectTime(GetResponseAsync(request, state), request, state, connectionTimeout).ConfigureAwait(false);
+
+                if (status == HttpActionStatus.ConnectionFailure)
+                    return Responses.ConnectFailure;
+
+                if (status != HttpActionStatus.Success)
+                    return ResponseFactory.BuildFailureResponse(status, state);
+
+                // (iloktionov): Шаг 3 - скачать тело ответа, если оно имеется.
+                if (!NeedToReadResponseBody(request, state))
+                    return ResponseFactory.BuildSuccessResponse(state);
+
+                if (ResponseBodyIsTooLarge(state))
+                {
+                    state.CancelRequestAttempt();
+                    return ResponseFactory.BuildResponse(ResponseCode.InsufficientStorage, state);
+                }
+
+                if (state.RequestCancelled)
+                    return new Response(ResponseCode.Canceled);
+
+                if (NeedToStreamResponseBody(state))
+                {
+                    state.ReturnStreamDirectly = true;
+                    state.PreventNextDispose();
+                    return ResponseFactory.BuildSuccessResponse(state);
+                }
+
+                status = await ReadResponseBodyAsync(request, state).ConfigureAwait(false);
+                return status == HttpActionStatus.Success
+                    ? ResponseFactory.BuildSuccessResponse(state)
+                    : ResponseFactory.BuildFailureResponse(status, state);
             }
         }
 
@@ -193,9 +188,31 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
             try
             {
-                if (request.Content != null)
+                var content = request.Content;
+                
+                if (content != null)
                 {
-                    await state.RequestStream.WriteAsync(request.Content.Buffer, request.Content.Offset, request.Content.Length).ConfigureAwait(false);
+                    if (content.Length < LOHObjectSizeThreshold)
+                    {
+                        await state.RequestStream
+                            .WriteAsync(content.Buffer, request.Content.Offset, request.Content.Length)
+                            .ConfigureAwait(false);
+                    }
+                    else
+                    {
+                        using (BuffersPool.AcquireHandle(out var buffer))
+                        {
+                            var index = content.Offset;
+                            var end = content.Offset + content.Length;
+                            while (index < end)
+                            {
+                                var size = Math.Min(buffer.Length, end - index);
+                                Buffer.BlockCopy(content.Buffer, index, buffer, 0, size);
+                                await state.RequestStream.WriteAsync(buffer, 0, size).ConfigureAwait(false);
+                                index += size;
+                            }
+                        }
+                    }
                 }
                 else if (request.StreamContent != null)
                 {
@@ -203,13 +220,11 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                     var bytesToSend = request.StreamContent.Length ?? long.MaxValue;
                     var bytesSent = 0L;
 
-                    using (var bufferHandle = ReadBuffersPool.AcquireHandle())
+                    using (BuffersPool.AcquireHandle(out var buffer))
                     {
-                        var buffer = bufferHandle.Resource;
-
                         while (bytesSent < bytesToSend)
                         {
-                            var bytesToRead = (int)Math.Min(buffer.Length, bytesToSend - bytesSent);
+                            var bytesToRead = (int) Math.Min(buffer.Length, bytesToSend - bytesSent);
 
                             int bytesRead;
 
@@ -263,7 +278,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         {
             try
             {
-                state.Response = (HttpWebResponse)await state.Request.GetResponseAsync().ConfigureAwait(false);
+                state.Response = (HttpWebResponse) await state.Request.GetResponseAsync().ConfigureAwait(false);
                 state.ResponseStream = state.Response.GetResponseStream();
                 return HttpActionStatus.Success;
             }
@@ -273,11 +288,10 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                 // (iloktionov): HttpWebRequest реагирует на коды ответа вроде 404 или 500 исключением со статусом ProtocolError.
                 if (status == HttpActionStatus.ProtocolError)
                 {
-                    state.Response = (HttpWebResponse)error.Response;
+                    state.Response = (HttpWebResponse) error.Response;
                     state.ResponseStream = state.Response.GetResponseStream();
                     return HttpActionStatus.Success;
                 }
-
                 return status;
             }
             catch (Exception error)
@@ -317,10 +331,12 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         private bool ResponseBodyIsTooLarge(WebRequestState state)
         {
             var size = Math.Max(state.Response.ContentLength, state.BodyStream?.Length ?? 0L);
-            var limit = Settings.MaxResponseBodySize?.Bytes ?? long.MaxValue;
+            var limit = Settings.MaxResponseBodySize ?? long.MaxValue;
 
             if (size > limit)
+            {
                 LogResponseBodyTooLarge(size, limit);
+            }
 
             return size > limit;
         }
@@ -329,7 +345,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         {
             try
             {
-                var contentLength = (int)state.Response.ContentLength;
+                var contentLength = (int) state.Response.ContentLength;
                 if (contentLength > 0)
                 {
                     state.BodyBuffer = Settings.BufferFactory(contentLength);
@@ -339,20 +355,21 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                     // (iloktionov): Если буфер размером contentLength не попадет в LOH, можно передать его напрямую для работы с сокетом.
                     // В противном случае лучше использовать небольшой промежуточный буфер из пула, т.к. ссылка на переданный сохранится надолго из-за Keep-Alive.
                     if (contentLength < LOHObjectSizeThreshold)
+                    {
                         while (totalBytesRead < contentLength)
                         {
-                            var bytesToRead = Math.Min(contentLength - totalBytesRead, PreferredReadSize);
+                            var bytesToRead = Math.Min(contentLength - totalBytesRead, BufferSize);
                             var bytesRead = await state.ResponseStream.ReadAsync(state.BodyBuffer, totalBytesRead, bytesToRead).ConfigureAwait(false);
                             if (bytesRead == 0)
                                 break;
 
                             totalBytesRead += bytesRead;
                         }
+                    }
                     else
-                        using (var bufferHandle = ReadBuffersPool.AcquireHandle())
+                    {
+                        using (var bufferHandle = BuffersPool.AcquireHandle(out var buffer))
                         {
-                            var buffer = bufferHandle.Resource;
-
                             while (totalBytesRead < contentLength)
                             {
                                 var bytesToRead = Math.Min(contentLength - totalBytesRead, buffer.Length);
@@ -365,6 +382,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                                 totalBytesRead += bytesRead;
                             }
                         }
+                    }
 
                     if (totalBytesRead < contentLength)
                         throw new EndOfStreamException($"Response stream ended prematurely. Read only {totalBytesRead} byte(s), but Content-Length specified {contentLength}.");
@@ -375,10 +393,8 @@ namespace Vostok.ClusterClient.Transport.Webrequest
                 {
                     state.BodyStream = new MemoryStream();
 
-                    using (var bufferHandle = ReadBuffersPool.AcquireHandle())
+                    using (BuffersPool.AcquireHandle(out var buffer))
                     {
-                        var buffer = bufferHandle.Resource;
-
                         while (true)
                         {
                             var bytesRead = await state.ResponseStream.ReadAsync(buffer, 0, buffer.Length).ConfigureAwait(false);
@@ -437,45 +453,61 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             }
         }
 
-        private static bool IsCancellationException(Exception error) =>
-            error is OperationCanceledException || (error as WebException)?.Status == WebExceptionStatus.RequestCanceled;
+        private static bool IsCancellationException(Exception error)
+        {
+            return error is OperationCanceledException || (error as WebException)?.Status == WebExceptionStatus.RequestCanceled;
+        }
 
         #region Logging
 
-        private void LogRequestTimeout(Request request, TimeSpan timeout) =>
-            log.Error($"Request timed out. Target = {request.Url.Authority}. Timeout = {timeout.ToPrettyString()}.");
+        private void LogRequestTimeout(Request request, TimeSpan timeout)
+        {
+            log.Error("Request timed out. Target = {Target}. Timeout = {Timeout}.", request.Url.Authority, timeout.ToPrettyString());
+        }
 
         private void LogConnectionFailure(Request request, WebException error, int attempt)
         {
-            var message = $"Connection failure. Target = {request.Url.Authority}. Attempt = {attempt}/{Settings.ConnectionAttempts}. Status = {error.Status}.";
-            var exception = error.InnerException ?? error;
-
-            if (attempt == Settings.ConnectionAttempts)
-                log.Error(exception, message);
-            else
-                log.Warn(exception, message);
+            log.Warn(
+                error.InnerException ?? error,
+                "Connection failure. Target = {Target}. Status = {Status}.",
+                request.Url.Authority,
+                error.Status);
         }
 
-        private void LogWebException(WebException error) =>
-            log.Error(error.InnerException ?? error, $"Error in sending request. Status = {error.Status}.");
+        private void LogWebException(WebException error)
+        {
+            log.Error(error.InnerException ?? error, "Error in sending request. Status = {Status}.", error.Status);
+        }
 
-        private void LogUnknownException(Exception error) =>
+        private void LogUnknownException(Exception error)
+        {
             log.Error(error, "Unknown error in sending request.");
+        }
 
-        private void LogSendBodyFailure(Request request, Exception error) =>
-            log.Error(error, "Error in sending request body to " + request.Url.Authority);
+        private void LogSendBodyFailure(Request request, Exception error)
+        {
+            log.Error(error, "Error in sending request body to {Target}", request.Url.Authority);
+        }
 
-        private void LogUserStreamFailure(Exception error) =>
+        private void LogUserStreamFailure(Exception error)
+        {
             log.Error(error, "Failure in reading input stream while sending request body.");
+        }
 
-        private void LogReceiveBodyFailure(Request request, Exception error) =>
-            log.Error(error, "Error in receiving request body from " + request.Url.Authority);
+        private void LogReceiveBodyFailure(Request request, Exception error)
+        {
+            log.Error(error, "Error in receiving request body from {Target}", request.Url.Authority);
+        }
 
-        private void LogFailedToWaitForRequestAbort() =>
-            log.Warn($"Timed out request was aborted but did not complete in {Settings.RequestAbortTimeout.ToPrettyString()}.");
+        private void LogFailedToWaitForRequestAbort()
+        {
+            log.Warn("Timed out request was aborted but did not complete in {RequestAbortTimeout}.", Settings.RequestAbortTimeout.ToPrettyString());
+        }
 
-        private void LogResponseBodyTooLarge(long size, long limit) =>
-            log.Error($"Response body size {size} is larger than configured limit of {limit} bytes.");
+        private void LogResponseBodyTooLarge(long size, long limit)
+        {
+            log.Error("Response body size {Size} is larger than configured limit of {Limit} bytes.", size, limit);
+        }
 
         #endregion
     }

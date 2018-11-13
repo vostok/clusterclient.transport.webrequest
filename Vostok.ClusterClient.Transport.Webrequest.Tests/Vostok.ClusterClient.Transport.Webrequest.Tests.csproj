@@ -1,39 +1,51 @@
 ﻿<?xml version="1.0" encoding="utf-8"?>
 <Project Sdk="Microsoft.NET.Sdk">
+
+  <Import Project="..\..\vostok.devtools\library-common-props\Test-Project.props" />
   <Import Project="..\..\vostok.devtools\git-commit-to-assembly-title\Vostok.Tools.GitCommit2AssemblyTitle.props" />
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp2.1</TargetFramework>
+    <TargetFrameworks>net471</TargetFrameworks>
+    <TargetFrameworks Condition="'$(OS)' != 'Windows_NT'">netcoreapp2.1</TargetFrameworks>
     <LangVersion>7.2</LangVersion>
-    <IsPackable>false</IsPackable>
+    <RootNamespace>Vostok.Clusterclient.Transport.Webrequest.Tests</RootNamespace>
   </PropertyGroup>
-
+  
   <ItemGroup>
     <PackageReference Include="FluentAssertions" Version="5.4.1" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="15.8.0" />
+    <PackageReference Include="NSubstitute" Version="3.1.0" />
     <PackageReference Include="NUnit" Version="3.10.1" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.10.0" />
   </ItemGroup>
-
   <ItemGroup>
+    <ProjectReference Include="..\..\vostok.clusterclient.transport.tests\Vostok.ClusterClient.Transport.Tests.Shared\Vostok.ClusterClient.Transport.Tests.Shared.csproj" />
     <ProjectReference Include="..\Vostok.ClusterClient.Transport.Webrequest\Vostok.ClusterClient.Transport.Webrequest.csproj" />
   </ItemGroup>
-
   <ItemGroup>
+    <Reference Include="System.Web" Condition="'$(TargetFramework)' == 'net471'" />
     <Reference Include="Vostok.ClusterClient.Core">
-      <HintPath>..\Vostok.ClusterClient.Transport.Webrequest\bin\Debug\netstandard2.0\Vostok.ClusterClient.Core.dll</HintPath>
+      <HintPath>..\..\vostok.clusterclient.core\Vostok.ClusterClient.Core\bin\Release\netstandard2.0\Vostok.ClusterClient.Core.dll</HintPath>
     </Reference>
     <Reference Include="Vostok.Logging.Abstractions">
+      <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\vostok.logging.abstractions\Vostok.Logging.Abstractions\bin\Release\netstandard2.0\Vostok.Logging.Abstractions.dll</HintPath>
+    </Reference>
+    <Reference Include="Vostok.Logging.Console">
+      <SpecificVersion>False</SpecificVersion>
+      <HintPath>..\..\vostok.logging.console\Vostok.Logging.Console\bin\Release\netstandard2.0\Vostok.Logging.Console.dll</HintPath>
     </Reference>
     <Reference Include="Vostok.Logging.Context">
       <HintPath>..\..\vostok.logging.context\Vostok.Logging.Context\bin\Release\netstandard2.0\Vostok.Logging.Context.dll</HintPath>
     </Reference>
-    <Reference Include="Vostok.Logging.Console">
-      <HintPath>..\..\vostok.logging.console\Vostok.Logging.Console\bin\Release\netstandard2.0\Vostok.Logging.Console.dll</HintPath>
-    </Reference>
-    <Reference Include="Vostok.Commons.Primitives">
-      <HintPath>..\..\vostok.commons.primitives\Vostok.Commons.Primitives\bin\Release\netstandard2.0\Vostok.Commons.Primitives.dll</HintPath>
-    </Reference>
   </ItemGroup>
+
+  <ItemGroup>  
+    <Compile Include="..\..\vostok.commons.threading\Vostok.Commons.Threading\ThreadSafeRandom.cs" Link="Threading\ThreadSafeRandom.cs" />
+  </ItemGroup>
+  
+  <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
+    <Compile Remove="**/*.cs" />
+  </ItemGroup>
+  
 </Project>

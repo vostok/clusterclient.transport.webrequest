@@ -1,28 +1,30 @@
 ﻿using System;
 using System.Net;
 using System.Net.Security;
-using Vostok.ClusterClient.Transport.Webrequest.Utilities;
+using Vostok.Commons.Helpers.Network;
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     internal static class WebRequestTuner
     {
-        private static readonly bool IsMono = RuntimeDetector.IsMono;
+        private static readonly bool IsMono = Type.GetType("Mono.Runtime") != null;
+
+        private static readonly BindIPEndPoint AddressSniffer = (servicePoint, endPoint, count) =>
+        {
+            ArpCacheMaintainer.ReportAddress(endPoint.Address);
+            return null;
+        };
 
         static WebRequestTuner()
         {
             if (!IsMono)
             {
-                HttpWebRequest.DefaultMaximumErrorResponseLength = -1;  // (razboynikov): potential bug here in future. Just remember
-                HttpWebRequest.DefaultMaximumResponseHeadersLength = int.MaxValue;  // (razboynikov): here was one with value -1
+                HttpWebRequest.DefaultMaximumErrorResponseLength = -1;
+                HttpWebRequest.DefaultMaximumResponseHeadersLength = int.MaxValue;
 
                 ServicePointManager.CheckCertificateRevocationList = false;
                 ServicePointManager.ServerCertificateValidationCallback = (_, __, ___, ____) => true;
             }
-        }
-
-        public static void Init()
-        {
         }
 
         public static void Tune(HttpWebRequest request, TimeSpan timeout, WebRequestTransportSettings settings)
@@ -37,16 +39,45 @@ namespace Vostok.ClusterClient.Transport.Webrequest
             request.AllowReadStreamBuffering = false;
             request.AuthenticationLevel = AuthenticationLevel.None;
             request.AutomaticDecompression = DecompressionMethods.None;
-            request.ServicePoint.Expect100Continue = false;
-            request.ServicePoint.ConnectionLimit = settings.MaxConnectionsPerEndpoint;
-            request.ServicePoint.UseNagleAlgorithm = false;
+
+            var servicePoint = request.ServicePoint;
+
+            servicePoint.Expect100Continue = false;
+            servicePoint.UseNagleAlgorithm = false;
+            servicePoint.ConnectionLimit = settings.MaxConnectionsPerEndpoint;
+            servicePoint.MaxIdleTime = (int) settings.ConnectionIdleTimeout.TotalMilliseconds;
+
+            if (settings.TcpKeepAliveEnabled)
+            {
+                servicePoint.SetTcpKeepAlive(true, (int) settings.TcpKeepAliveTime.TotalMilliseconds, (int) settings.TcpKeepAliveInterval.TotalMilliseconds);
+            }
+
+            if (settings.ArpCacheWarmupEnabled)
+            {
+                if (servicePoint.BindIPEndPointDelegate == null)
+                    servicePoint.BindIPEndPointDelegate = AddressSniffer;
+            }
+            else
+            {
+                servicePoint.BindIPEndPointDelegate = null;
+            }
 
             if (!IsMono)
-                request.ServicePoint.ReceiveBufferSize = 16*1024;
+                servicePoint.ReceiveBufferSize = 16 * 1024;
 
-            var timeoutInMilliseconds = Math.Max(1, (int)timeout.TotalMilliseconds);
+            var timeoutInMilliseconds = Math.Max(1, (int) timeout.TotalMilliseconds);
             request.Timeout = timeoutInMilliseconds;
             request.ReadWriteTimeout = timeoutInMilliseconds;
+
+            if (settings.ClientCertificates != null)
+            {
+                foreach (var certificate in settings.ClientCertificates)
+                {
+                    request.ClientCertificates.Add(certificate);
+                }
+            }
         }
+
+        public static void Touch() { }
     }
 }

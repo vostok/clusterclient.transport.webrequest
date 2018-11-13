@@ -1,20 +1,20 @@
 ﻿using System;
 using System.Threading;
 using System.Threading.Tasks;
+using FluentAssertions.Extensions;
 using NUnit.Framework;
-using Vostok.ClusterClient.Core.Model;
-using Vostok.ClusterClient.Transport.Webrequest.Utilities;
-using Vostok.Commons.Time;
+using Vostok.Clusterclient.Core.Model;
+using Vostok.Clusterclient.Transport.Webrequest.Utilities;
 using Vostok.Logging.Abstractions;
 using Vostok.Logging.Console;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
+namespace Vostok.Clusterclient.Transport.Webrequest.Tests.Functional
 {
     [TestFixture]
     internal class TransportTestsBase
     {
-        protected ILog Log;
-        protected WebRequestTransport Transport;
+        protected ILog log;
+        protected WebRequestTransport transport;
 
         static TransportTestsBase()
         {
@@ -22,20 +22,30 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests.Functional
         }
 
         [SetUp]
-        public void SetUp()
+        public virtual void SetUp()
         {
-            Log = new ConsoleLog();
-            Transport = new WebRequestTransport(Log);
+            log = new ConsoleLog();
+            transport = new WebRequestTransport(log);
         }
 
-        protected Task<Response> SendAsync(Request request, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+        protected Task<Response> SendAsync(Request request, TimeSpan? timeout = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Transport.SendAsync(request, timeout ?? 1.Minutes(), cancellationToken);
+            return SendAsync(request, null, timeout ?? 1.Minutes(), cancellationToken);
         }
 
-        protected Response Send(Request request, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+        protected Response Send(Request request, TimeSpan? timeout = null, CancellationToken cancellationToken = default(CancellationToken))
         {
-            return Transport.SendAsync(request, timeout ?? 1.Minutes(), cancellationToken).GetAwaiter().GetResult();
+            return transport.SendAsync(request, null, timeout ?? 1.Minutes(), cancellationToken).GetAwaiter().GetResult();
+        }
+        
+        protected Task<Response> SendAsync(Request request, TimeSpan? connectionTimeout, TimeSpan? timeout = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return transport.SendAsync(request, connectionTimeout, timeout ?? 1.Minutes(), cancellationToken);
+        }
+
+        protected Response Send(Request request, TimeSpan? connectionTimeout, TimeSpan? timeout = null, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            return transport.SendAsync(request, connectionTimeout, timeout ?? 1.Minutes(), cancellationToken).GetAwaiter().GetResult();
         }
     }
 }

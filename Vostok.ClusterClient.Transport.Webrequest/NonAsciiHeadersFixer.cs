@@ -1,7 +1,7 @@
 ﻿using System.Text;
-using Vostok.ClusterClient.Core.Model;
+using Vostok.Clusterclient.Core.Model;
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     // (iloktionov): A dirty hack that exploits header serialization implementation inside HttpWebRequest
     // (iloktionov): (it just directly casts every character to byte, so we can cook a longer
@@ -37,17 +37,22 @@ namespace Vostok.ClusterClient.Transport.Webrequest
 
             var fixedStringBuilder = new StringBuilder(utf8Bytes.Length);
 
-            foreach (var t in utf8Bytes)
-                fixedStringBuilder.Append((char)t);
+            for (var i = 0; i < utf8Bytes.Length; i++)
+            {
+                fixedStringBuilder.Append((char) utf8Bytes[i]);
+            }
 
             return fixedStringBuilder.ToString();
         }
 
         private static bool IsAscii(string value)
         {
-            foreach (var ch in value)
-                if (ch < MinASCII || ch > MaxASCII)
+            for (var i = 0; i < value.Length; i++)
+            {
+                var currentCharacter = value[i];
+                if (currentCharacter < MinASCII || currentCharacter > MaxASCII)
                     return false;
+            }
 
             return true;
         }

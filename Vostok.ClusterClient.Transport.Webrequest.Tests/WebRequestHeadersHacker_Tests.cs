@@ -5,7 +5,7 @@ using NUnit.Framework;
 using Vostok.Logging.Abstractions;
 using Vostok.Logging.Console;
 
-namespace Vostok.ClusterClient.Transport.Webrequest.Tests
+namespace Vostok.Clusterclient.Transport.Webrequest.Tests
 {
     [TestFixture]
     internal class WebRequestHeadersHacker_Tests
@@ -22,6 +22,8 @@ namespace Vostok.ClusterClient.Transport.Webrequest.Tests
         public void Should_allow_to_set_values_directly_for_restricted_headers()
         {
             var request = WebRequest.CreateHttp("http://kontur.ru/");
+
+            WebRequestHeadersHacker.TryUnlockRestrictedHeaders(request, log).Should().BeTrue();
 
             Action unsafeAssignment = () =>
             {

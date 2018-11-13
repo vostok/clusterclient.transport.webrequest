@@ -2,11 +2,11 @@
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
-using Vostok.ClusterClient.Core.Model;
+using Vostok.Clusterclient.Core.Model;
 using Vostok.Commons.Time;
 using Vostok.Logging.Abstractions;
 
-namespace Vostok.ClusterClient.Transport.Webrequest
+namespace Vostok.Clusterclient.Transport.Webrequest
 {
     internal class ConnectTimeLimiter
     {
@@ -65,11 +65,7 @@ namespace Vostok.ClusterClient.Transport.Webrequest
         {
             var message = $"Connection failure. Target = {request.Url.Authority}. Attempt = {attempt}. Status = {error.Status}.";
             var exception = error.InnerException ?? error;
-
-            if (attempt == settings.ConnectionAttempts)
-                log.Error(exception, message);
-            else
-                log.Warn(exception, message);
+            log.Warn(message, exception);
         }
     }
 }
