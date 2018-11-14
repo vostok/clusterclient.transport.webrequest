@@ -39,7 +39,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
             for (var i = 0; i < utf8Bytes.Length; i++)
             {
-                fixedStringBuilder.Append((char) utf8Bytes[i]);
+                fixedStringBuilder.Append((char)utf8Bytes[i]);
             }
 
             return fixedStringBuilder.ToString();

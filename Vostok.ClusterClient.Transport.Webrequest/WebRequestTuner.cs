@@ -45,11 +45,11 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             servicePoint.Expect100Continue = false;
             servicePoint.UseNagleAlgorithm = false;
             servicePoint.ConnectionLimit = settings.MaxConnectionsPerEndpoint;
-            servicePoint.MaxIdleTime = (int) settings.ConnectionIdleTimeout.TotalMilliseconds;
+            servicePoint.MaxIdleTime = (int)settings.ConnectionIdleTimeout.TotalMilliseconds;
 
             if (settings.TcpKeepAliveEnabled)
             {
-                servicePoint.SetTcpKeepAlive(true, (int) settings.TcpKeepAliveTime.TotalMilliseconds, (int) settings.TcpKeepAliveInterval.TotalMilliseconds);
+                servicePoint.SetTcpKeepAlive(true, (int)settings.TcpKeepAliveTime.TotalMilliseconds, (int)settings.TcpKeepAliveInterval.TotalMilliseconds);
             }
 
             if (settings.ArpCacheWarmupEnabled)
@@ -65,7 +65,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             if (!IsMono)
                 servicePoint.ReceiveBufferSize = 16 * 1024;
 
-            var timeoutInMilliseconds = Math.Max(1, (int) timeout.TotalMilliseconds);
+            var timeoutInMilliseconds = Math.Max(1, (int)timeout.TotalMilliseconds);
             request.Timeout = timeoutInMilliseconds;
             request.ReadWriteTimeout = timeoutInMilliseconds;
 
@@ -78,6 +78,8 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             }
         }
 
-        public static void Touch() { }
+        public static void Touch()
+        {
+        }
     }
 }
