@@ -12,7 +12,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest.Utilities
             if (multiplier <= 0)
                 return;
 
-            var minimumThreads = Math.Min(Environment.ProcessorCount*multiplier, MaximumThreads);
+            var minimumThreads = Math.Min(Environment.ProcessorCount * multiplier, MaximumThreads);
 
             ThreadPool.SetMaxThreads(MaximumThreads, MaximumThreads);
             ThreadPool.SetMinThreads(minimumThreads, minimumThreads);

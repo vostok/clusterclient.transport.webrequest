@@ -20,7 +20,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 if (headersTypeField == null)
                     return;
 
-                var headersParameter = Expression.Parameter(typeof (WebHeaderCollection));
+                var headersParameter = Expression.Parameter(typeof(WebHeaderCollection));
                 var headersType = Expression.Field(headersParameter, headersTypeField);
                 var headersTypeValue = Expression.Convert(Expression.Constant(0), headersTypeField.FieldType);
                 var assignment = Expression.Assign(headersType, headersTypeValue);

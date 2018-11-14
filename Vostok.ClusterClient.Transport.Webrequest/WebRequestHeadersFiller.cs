@@ -114,7 +114,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 webRequest.UserAgent = header.Value;
                 return true;
             }
-            
+
             if (header.Name.Equals(HeaderNames.Date))
             {
                 webRequest.Date = DateTime.Parse(header.Value);

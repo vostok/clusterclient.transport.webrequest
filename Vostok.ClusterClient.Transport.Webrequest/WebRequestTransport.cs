@@ -19,8 +19,8 @@ namespace Vostok.Clusterclient.Transport.Webrequest
     /// </summary>
     public class WebRequestTransport : ITransport
     {
-        private const int BufferSize = 16*1024;
-        private const int LOHObjectSizeThreshold = 85*1000;
+        private const int BufferSize = 16 * 1024;
+        private const int LOHObjectSizeThreshold = 84 * 1000;
 
         private static readonly IPool<byte[]> BuffersPool = new Pool<byte[]>(() => new byte[BufferSize]);
 
@@ -28,6 +28,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         private readonly ConnectTimeLimiter connectTimeLimiter;
         private readonly ThreadPoolMonitor threadPoolMonitor;
 
+        /// <inheritdoc cref="WebRequestTransport" />
         public WebRequestTransport(WebRequestTransportSettings settings, ILog log)
         {
             Settings = settings;
@@ -36,16 +37,15 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
             connectTimeLimiter = new ConnectTimeLimiter(settings, log);
             threadPoolMonitor = ThreadPoolMonitor.Instance;
-            
+
             WebRequestTuner.Touch();
         }
 
+        /// <inheritdoc cref="WebRequestTransport" />
         public WebRequestTransport(ILog log)
             : this(new WebRequestTransportSettings(), log)
         {
         }
-
-        internal WebRequestTransportSettings Settings { get; }
 
         /// <inheritdoc />
         public TransportCapabilities Capabilities =>
@@ -74,7 +74,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     return taskWithResponse.GetAwaiter().GetResult();
                 }
 
-                // (iloktionov): Если выполнившееся задание не кастуется к Task<Response>, сработал таймаут.
+                // If the completed task does not cast to Task<Response>, it means that timeout was triggered.
                 state.CancelRequest();
                 LogRequestTimeout(request, timeout);
 
@@ -83,7 +83,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     threadPoolMonitor.ReportAndFixIfNeeded(log);
                 }
 
-                // (iloktionov): Попытаемся дождаться завершения задания по отправке запроса перед тем, как возвращать результат:
+                // Lets try to wait for request sending task completion before returning result:
                 var senderTaskContinuation = senderTask.ContinueWith(
                     t =>
                     {
@@ -102,6 +102,22 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             }
         }
 
+        internal WebRequestTransportSettings Settings { get; }
+
+        private static bool NeedToReadResponseBody(Request request, WebRequestState state)
+        {
+            if (request.Method == RequestMethods.Head)
+                return false;
+
+            // ContentLength can be -1 in case server returns content without setting the header. It is a default on HttpWebRequest level.
+            return state.Response.ContentLength != 0;
+        }
+
+        private static bool IsCancellationException(Exception error)
+        {
+            return error is OperationCanceledException || (error as WebException)?.Status == WebExceptionStatus.RequestCanceled;
+        }
+
         private async Task<Response> SendInternalAsync(Request request, WebRequestState state, TimeSpan? connectionTimeout, CancellationToken cancellationToken)
         {
             using (cancellationToken.Register(state.CancelRequest))
@@ -114,7 +130,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
                 HttpActionStatus status;
 
-                // (iloktionov): Шаг 1 - отправить тело запроса, если оно имеется.
+                // Step 1 - send request body if it exists.
                 if (state.RequestCancelled)
                     return new Response(ResponseCode.Canceled);
 
@@ -129,7 +145,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                         return ResponseFactory.BuildFailureResponse(status, state);
                 }
 
-                // (iloktionov): Шаг 2 - получить ответ от сервера.
+                // Step 2 - receive response from server.
                 if (state.RequestCancelled)
                     return new Response(ResponseCode.Canceled);
 
@@ -143,7 +159,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 if (status != HttpActionStatus.Success)
                     return ResponseFactory.BuildFailureResponse(status, state);
 
-                // (iloktionov): Шаг 3 - скачать тело ответа, если оно имеется.
+                // Step 3 - download request body if it exists.
                 if (!NeedToReadResponseBody(request, state))
                     return ResponseFactory.BuildSuccessResponse(state);
 
@@ -189,7 +205,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             try
             {
                 var content = request.Content;
-                
+
                 if (content != null)
                 {
                     if (content.Length < LOHObjectSizeThreshold)
@@ -224,7 +240,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     {
                         while (bytesSent < bytesToSend)
                         {
-                            var bytesToRead = (int) Math.Min(buffer.Length, bytesToSend - bytesSent);
+                            var bytesToRead = (int)Math.Min(buffer.Length, bytesToSend - bytesSent);
 
                             int bytesRead;
 
@@ -278,20 +294,21 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         {
             try
             {
-                state.Response = (HttpWebResponse) await state.Request.GetResponseAsync().ConfigureAwait(false);
+                state.Response = (HttpWebResponse)await state.Request.GetResponseAsync().ConfigureAwait(false);
                 state.ResponseStream = state.Response.GetResponseStream();
                 return HttpActionStatus.Success;
             }
             catch (WebException error)
             {
                 var status = HandleWebException(request, state, error);
-                // (iloktionov): HttpWebRequest реагирует на коды ответа вроде 404 или 500 исключением со статусом ProtocolError.
+                // HttpWebRequest reacts to response codes like 404 or 500 with an exception with ProtocolError status. 
                 if (status == HttpActionStatus.ProtocolError)
                 {
-                    state.Response = (HttpWebResponse) error.Response;
+                    state.Response = (HttpWebResponse)error.Response;
                     state.ResponseStream = state.Response.GetResponseStream();
                     return HttpActionStatus.Success;
                 }
+
                 return status;
             }
             catch (Exception error)
@@ -299,15 +316,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 LogUnknownException(error);
                 return HttpActionStatus.UnknownFailure;
             }
-        }
-
-        private static bool NeedToReadResponseBody(Request request, WebRequestState state)
-        {
-            if (request.Method == RequestMethods.Head)
-                return false;
-
-            // (iloktionov): ContentLength может быть равен -1, если сервер не укажет заголовок, но вернет контент. Это умолчание на уровне HttpWebRequest.
-            return state.Response.ContentLength != 0;
         }
 
         private bool NeedToStreamResponseBody(WebRequestState state)
@@ -345,15 +353,15 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         {
             try
             {
-                var contentLength = (int) state.Response.ContentLength;
+                var contentLength = (int)state.Response.ContentLength;
                 if (contentLength > 0)
                 {
                     state.BodyBuffer = Settings.BufferFactory(contentLength);
 
                     var totalBytesRead = 0;
 
-                    // (iloktionov): Если буфер размером contentLength не попадет в LOH, можно передать его напрямую для работы с сокетом.
-                    // В противном случае лучше использовать небольшой промежуточный буфер из пула, т.к. ссылка на переданный сохранится надолго из-за Keep-Alive.
+                    // If a contentLength-sized buffer won't end up in LOH, it can be used directly to work with socket.
+                    // Otherwise, it's better to use a small temporary buffer from a pool because the passed reference will be stored for a long time due to Keep-Alive.
                     if (contentLength < LOHObjectSizeThreshold)
                     {
                         while (totalBytesRead < contentLength)
@@ -368,7 +376,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     }
                     else
                     {
-                        using (var bufferHandle = BuffersPool.AcquireHandle(out var buffer))
+                        using (BuffersPool.AcquireHandle(out var buffer))
                         {
                             while (totalBytesRead < contentLength)
                             {
@@ -451,11 +459,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     LogWebException(error);
                     return HttpActionStatus.UnknownFailure;
             }
-        }
-
-        private static bool IsCancellationException(Exception error)
-        {
-            return error is OperationCanceledException || (error as WebException)?.Status == WebExceptionStatus.RequestCanceled;
         }
 
         #region Logging

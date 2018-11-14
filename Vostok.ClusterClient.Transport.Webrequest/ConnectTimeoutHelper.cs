@@ -1,18 +1,20 @@
 ﻿using System;
 using System.Linq.Expressions;
 using System.Net;
-using Vostok.Clusterclient.Transport.Webrequest.Utilities;
+using Vostok.Commons.Environment;
 using Vostok.Logging.Abstractions;
 
 namespace Vostok.Clusterclient.Transport.Webrequest
 {
     internal static class ConnectTimeoutHelper
     {
-        private static readonly object sync = new object();
+        private static readonly object Sync = new object();
 
         private static volatile bool canCheckSocket = true;
 
         private static Func<HttpWebRequest, bool> isSocketConnected;
+
+        public static bool CanCheckSocket => canCheckSocket;
 
         public static bool IsSocketConnected(HttpWebRequest request, ILog log)
         {
@@ -29,13 +31,11 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             {
                 canCheckSocket = false;
 
-                WrapLog(log).Error("Failed to check socket connection", error);
+                WrapLog(log).Error(error, "Failed to check socket connection");
             }
 
             return true;
         }
-
-        public static bool CanCheckSocket => canCheckSocket;
 
         private static void Initialize(ILog log)
         {
@@ -44,7 +44,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
             Exception savedError = null;
 
-            lock (sync)
+            lock (Sync)
             {
                 if (isSocketConnected != null || !canCheckSocket)
                     return;
@@ -69,7 +69,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             }
 
             if (savedError != null)
-                WrapLog(log).Error("Failed to build connection checker lambda", savedError);
+                WrapLog(log).Error(savedError, "Failed to build connection checker lambda");
         }
 
         /// <summary>
@@ -78,7 +78,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         /// </summary>
         private static Func<HttpWebRequest, bool> BuildSocketConnectedChecker()
         {
-            var request = Expression.Parameter(typeof (HttpWebRequest));
+            var request = Expression.Parameter(typeof(HttpWebRequest));
 
             var stream = Expression.Field(request, "_SubmitWriteStream");
             var socket = Expression.Property(stream, "InternalSocket");
@@ -95,7 +95,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         private static ILog WrapLog(ILog log)
         {
-            return log.ForContext(typeof (ConnectTimeoutHelper).Name);
+            return log.ForContext(typeof(ConnectTimeoutHelper).Name);
         }
     }
 }

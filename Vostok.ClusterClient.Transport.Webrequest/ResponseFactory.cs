@@ -7,7 +7,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
     {
         public static Response BuildSuccessResponse(WebRequestState state)
         {
-            return BuildResponse((ResponseCode) (int) state.Response.StatusCode, state);
+            return BuildResponse((ResponseCode)(int)state.Response.StatusCode, state);
         }
 
         public static Response BuildFailureResponse(HttpActionStatus status, WebRequestState state)
@@ -40,8 +40,8 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         public static Response BuildResponse(ResponseCode code, WebRequestState state)
         {
             return new Response(
-                code, 
-                CreateResponseContent(state), 
+                code,
+                CreateResponseContent(state),
                 CreateResponseHeaders(state),
                 CreateResponseStream(state)
             );
@@ -56,7 +56,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 return new Content(state.BodyBuffer, 0, state.BodyBufferLength);
 
             if (state.BodyStream != null)
-                return new Content(state.BodyStream.GetBuffer(), 0, (int) state.BodyStream.Position);
+                return new Content(state.BodyStream.GetBuffer(), 0, (int)state.BodyStream.Position);
 
             return null;
         }

@@ -11,7 +11,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         public static readonly ThreadPoolMonitor Instance = new ThreadPoolMonitor();
 
-        private static readonly TimeSpan minReportInterval = TimeSpan.FromSeconds(1);
+        private static readonly TimeSpan MinReportInterval = TimeSpan.FromSeconds(1);
 
         private readonly object syncObject;
         private DateTime lastReportTimestamp;
@@ -46,7 +46,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
             lock (syncObject)
             {
-                if (currentTimestamp - lastReportTimestamp < minReportInterval)
+                if (currentTimestamp - lastReportTimestamp < MinReportInterval)
                     return;
 
                 lastReportTimestamp = currentTimestamp;
@@ -63,7 +63,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 minIocpThreads,
                 maxIocpThreads);
 
-            var currentMultiplier = Math.Min(minWorkerThreads/Environment.ProcessorCount, minIocpThreads/Environment.ProcessorCount);
+            var currentMultiplier = Math.Min(minWorkerThreads / Environment.ProcessorCount, minIocpThreads / Environment.ProcessorCount);
             if (currentMultiplier < TargetMultiplier)
             {
                 log.Info("I will configure ThreadPool for you, buddy!");
