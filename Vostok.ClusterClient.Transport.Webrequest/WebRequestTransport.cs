@@ -5,7 +5,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using Vostok.Clusterclient.Core.Model;
 using Vostok.Clusterclient.Core.Transport;
-using Vostok.Clusterclient.Transport.Webrequest.Pool;
+using Vostok.Commons.Collections;
 using Vostok.Commons.Time;
 using Vostok.Logging.Abstractions;
 
@@ -22,7 +22,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         private const int BufferSize = 16 * 1024;
         private const int LOHObjectSizeThreshold = 84 * 1000;
 
-        private static readonly IPool<byte[]> BuffersPool = new Pool<byte[]>(() => new byte[BufferSize]);
+        private static readonly UnboundedObjectPool<byte[]> BuffersPool = new UnboundedObjectPool<byte[]>(() => new byte[BufferSize]);
 
         private readonly ILog log;
         private readonly ConnectTimeLimiter connectTimeLimiter;
@@ -216,7 +216,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     }
                     else
                     {
-                        using (BuffersPool.AcquireHandle(out var buffer))
+                        using (BuffersPool.Acquire(out var buffer))
                         {
                             var index = content.Offset;
                             var end = content.Offset + content.Length;
@@ -236,11 +236,11 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     var bytesToSend = request.StreamContent.Length ?? long.MaxValue;
                     var bytesSent = 0L;
 
-                    using (BuffersPool.AcquireHandle(out var buffer))
+                    using (BuffersPool.Acquire(out var buffer))
                     {
                         while (bytesSent < bytesToSend)
                         {
-                            var bytesToRead = (int)Math.Min(buffer.Length, bytesToSend - bytesSent);
+                            var bytesToRead = (int) Math.Min(buffer.Length, bytesToSend - bytesSent);
 
                             int bytesRead;
 
@@ -376,7 +376,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     }
                     else
                     {
-                        using (BuffersPool.AcquireHandle(out var buffer))
+                        using (BuffersPool.Acquire(out var buffer))
                         {
                             while (totalBytesRead < contentLength)
                             {
@@ -401,7 +401,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 {
                     state.BodyStream = new MemoryStream();
 
-                    using (BuffersPool.AcquireHandle(out var buffer))
+                    using (BuffersPool.Acquire(out var buffer))
                     {
                         while (true)
                         {
