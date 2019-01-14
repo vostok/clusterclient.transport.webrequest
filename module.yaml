@@ -6,23 +6,24 @@ notests *default:
       name: dotnet
 
   install:
-    - module vostok.clusterclient.core@develop
+    - module vostok.clusterclient.core
     - module vostok.logging.abstractions
-    - Vostok.ClusterClient.Transport.Webrequest\bin\Release\netstandard2.0/Vostok.ClusterClient.Transport.Webrequest.dll
+    - Vostok.ClusterClient.Transport.Webrequest/bin/Release/netstandard2.0/Vostok.ClusterClient.Transport.Webrequest.dll
 
   deps:
-    - vostok.clusterclient.core@develop
+    - vostok.devtools
+    - vostok.clusterclient.core
     - vostok.logging.abstractions
     - vostok.commons.time/src
     - vostok.commons.collections/src
     - vostok.commons.helpers/src
-    - vostok.devtools
 
 full-build > notests:
   deps:
     - vostok.logging.console
     - vostok.logging.context
-    - vostok.clusterclient.transport.tests/full-build
+    - vostok.clusterclient.transport.tests
+
   build:
     target: Vostok.ClusterClient.Transport.Webrequest.sln
     configuration: Release
