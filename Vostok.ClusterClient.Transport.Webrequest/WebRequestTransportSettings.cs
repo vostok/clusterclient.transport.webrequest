@@ -1,9 +1,11 @@
 ﻿using System;
 using System.Net;
 using System.Security.Cryptography.X509Certificates;
+using JetBrains.Annotations;
 
 namespace Vostok.Clusterclient.Transport.Webrequest
 {
+    [PublicAPI]
     public class WebRequestTransportSettings
     {
         public bool Pipelined { get; set; } = true;
