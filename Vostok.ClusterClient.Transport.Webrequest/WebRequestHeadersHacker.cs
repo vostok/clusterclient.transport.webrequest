@@ -47,7 +47,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             catch (Exception error)
             {
                 if (canUnlock)
-                    log.Warn("Failed to unlock HttpWebRequestHeaders for unsafe assignment.", error);
+                    log.Warn(error, "Failed to unlock HttpWebRequestHeaders for unsafe assignment.");
 
                 return canUnlock = false;
             }
