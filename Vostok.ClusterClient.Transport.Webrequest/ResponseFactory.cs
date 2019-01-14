@@ -14,6 +14,9 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         {
             switch (status)
             {
+                case HttpActionStatus.ConnectionFailure:
+                    return BuildResponse(ResponseCode.ConnectFailure, state);
+
                 case HttpActionStatus.SendFailure:
                     return BuildResponse(ResponseCode.SendFailure, state);
 

@@ -31,7 +31,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         public TimeSpan TimeRemaining => budget.Remaining;
         
-        public bool RequestCancelled => cancellationState > 0;
+        public bool RequestCanceled => cancellationState > 0;
 
         public void CancelRequest()
         {
