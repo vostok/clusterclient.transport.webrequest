@@ -25,8 +25,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         public Stream RequestStream { get; set; }
         public Stream ResponseStream { get; set; }
 
-        public int ConnectionAttempt { get; set; }
-
         public byte[] BodyBuffer { get; set; }
         public int BodyBufferLength { get; set; }
 

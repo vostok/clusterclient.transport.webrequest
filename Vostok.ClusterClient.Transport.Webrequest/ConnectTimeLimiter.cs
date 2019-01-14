@@ -51,7 +51,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 if (!ConnectTimeoutHelper.IsSocketConnected(state.Request, log))
                 {
                     state.CancelRequestAttempt();
-                    LogConnectionFailure(request, new WebException($"Connection attempt timed out. Timeout = {connectTimeout.ToPrettyString()}.", WebExceptionStatus.ConnectFailure), state.ConnectionAttempt);
+                    LogConnectionFailure(request, new WebException($"Connection attempt timed out. Timeout = {connectTimeout.ToPrettyString()}.", WebExceptionStatus.ConnectFailure));
                     return HttpActionStatus.ConnectionFailure;
                 }
 
@@ -59,11 +59,11 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             }
         }
 
-        private void LogConnectionFailure(Request request, WebException error, int attempt)
+        private void LogConnectionFailure(Request request, WebException error)
         {
             log.Warn(error.InnerException ?? error, 
-                "Connection failure. Target = {Target}. Attempt = {Attempt}. Status = {Status}.",
-                request.Url.Authority, attempt, error.Status);
+                "Connection failure. Target = {Target}. Status = {Status}.",
+                request.Url.Authority, error.Status);
         }
     }
 }

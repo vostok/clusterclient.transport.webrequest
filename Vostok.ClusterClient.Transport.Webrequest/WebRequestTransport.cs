@@ -444,7 +444,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 case WebExceptionStatus.NameResolutionFailure:
                 case WebExceptionStatus.ProxyNameResolutionFailure:
                 case WebExceptionStatus.SecureChannelFailure:
-                    LogConnectionFailure(request, error, state.ConnectionAttempt);
+                    LogConnectionFailure(request, error);
                     return HttpActionStatus.ConnectionFailure;
                 case WebExceptionStatus.SendFailure:
                     LogWebException(error);
@@ -468,7 +468,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             log.Error("Request timed out. Target = {Target}. Timeout = {Timeout}.", request.Url.Authority, timeout.ToPrettyString());
         }
 
-        private void LogConnectionFailure(Request request, WebException error, int attempt)
+        private void LogConnectionFailure(Request request, WebException error)
         {
             log.Warn(
                 error.InnerException ?? error,
