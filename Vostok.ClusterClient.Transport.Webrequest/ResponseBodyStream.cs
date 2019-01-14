@@ -32,9 +32,9 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             return state.ResponseStream.ReadAsync(buffer, offset, count, cancellationToken);
         }
 
-        public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+        public override IAsyncResult BeginRead(byte[] buffer, int offset, int count, AsyncCallback callback, object asyncState)
         {
-            return this.state.ResponseStream.BeginRead(buffer, offset, count, callback, state);
+            return state.ResponseStream.BeginRead(buffer, offset, count, callback, asyncState);
         }
 
         public override int EndRead(IAsyncResult asyncResult)
@@ -82,7 +82,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             throw new NotSupportedException();
         }
 
-        public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object state)
+        public override IAsyncResult BeginWrite(byte[] buffer, int offset, int count, AsyncCallback callback, object asyncState)
         {
             throw new NotSupportedException();
         }
