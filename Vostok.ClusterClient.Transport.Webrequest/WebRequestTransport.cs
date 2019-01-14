@@ -3,6 +3,7 @@ using System.IO;
 using System.Net;
 using System.Threading;
 using System.Threading.Tasks;
+using JetBrains.Annotations;
 using Vostok.Clusterclient.Core.Model;
 using Vostok.Clusterclient.Core.Transport;
 using Vostok.Commons.Collections;
@@ -17,6 +18,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
     /// <para>Represents an <see cref="ITransport"/> implementation which uses <see cref="HttpWebRequest"/> to send requests to replicas.</para>
     /// <para>You can also use <see cref="IClusterClientConfigurationExtensions.SetupWebRequestTransport(Core.IClusterClientConfiguration)"/> extension to set up this transport in your configuration.</para>
     /// </summary>
+    [PublicAPI]
     public class WebRequestTransport : ITransport
     {
         private const int BufferSize = 16 * 1024;
