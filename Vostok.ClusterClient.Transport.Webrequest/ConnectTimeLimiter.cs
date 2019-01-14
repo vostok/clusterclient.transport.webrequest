@@ -10,12 +10,10 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 {
     internal class ConnectTimeLimiter
     {
-        private readonly WebRequestTransportSettings settings;
         private readonly ILog log;
 
-        public ConnectTimeLimiter(WebRequestTransportSettings settings, ILog log)
+        public ConnectTimeLimiter(ILog log)
         {
-            this.settings = settings;
             this.log = log;
         }
 
@@ -63,9 +61,9 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         private void LogConnectionFailure(Request request, WebException error, int attempt)
         {
-            var message = $"Connection failure. Target = {request.Url.Authority}. Attempt = {attempt}. Status = {error.Status}.";
-            var exception = error.InnerException ?? error;
-            log.Warn(message, exception);
+            log.Warn(error.InnerException ?? error, 
+                "Connection failure. Target = {Target}. Attempt = {Attempt}. Status = {Status}.",
+                request.Url.Authority, attempt, error.Status);
         }
     }
 }
