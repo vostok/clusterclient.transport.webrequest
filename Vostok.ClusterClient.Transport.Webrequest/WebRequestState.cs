@@ -57,6 +57,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 }
                 catch
                 {
+                    // ignored
                 }
         }
 
@@ -83,6 +84,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 }
                 catch
                 {
+                    // ignored
                 }
                 finally
                 {
@@ -90,7 +92,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 }
         }
 
-        public void CloseResponseStream()
+        private void CloseResponseStream()
         {
             if (ResponseStream != null)
                 try
@@ -99,6 +101,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 }
                 catch
                 {
+                    // ignored
                 }
                 finally
                 {
