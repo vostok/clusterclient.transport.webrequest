@@ -10,8 +10,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest
     {
         public bool Pipelined { get; set; } = true;
 
-        public bool FixThreadPoolProblems { get; set; } = true;
-
         public TimeSpan ConnectionIdleTimeout { get; set; } = TimeSpan.FromMinutes(2);
 
         public TimeSpan RequestAbortTimeout { get; set; } = TimeSpan.FromMilliseconds(250);

@@ -18,31 +18,33 @@
     <PackageReference Include="NUnit" Version="3.11.0" />
     <PackageReference Include="NUnit3TestAdapter" Version="3.11.0" />
   </ItemGroup>
+  
   <ItemGroup>
     <ProjectReference Include="..\..\vostok.clusterclient.transport.tests\Vostok.ClusterClient.Transport.Tests.Shared\Vostok.ClusterClient.Transport.Tests.Shared.csproj" />
     <ProjectReference Include="..\Vostok.ClusterClient.Transport.Webrequest\Vostok.ClusterClient.Transport.Webrequest.csproj" />
   </ItemGroup>
+
   <ItemGroup>
     <Reference Include="System.Web" Condition="'$(TargetFramework)' == 'net471'" />
     <Reference Include="Vostok.ClusterClient.Core">
       <HintPath>..\..\vostok.clusterclient.core\Vostok.ClusterClient.Core\bin\Release\netstandard2.0\Vostok.ClusterClient.Core.dll</HintPath>
     </Reference>
+
     <Reference Include="Vostok.Logging.Abstractions">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\vostok.logging.abstractions\Vostok.Logging.Abstractions\bin\Release\netstandard2.0\Vostok.Logging.Abstractions.dll</HintPath>
     </Reference>
+
     <Reference Include="Vostok.Logging.Console">
       <SpecificVersion>False</SpecificVersion>
       <HintPath>..\..\vostok.logging.console\Vostok.Logging.Console\bin\Release\netstandard2.0\Vostok.Logging.Console.dll</HintPath>
     </Reference>
+
     <Reference Include="Vostok.Logging.Context">
       <HintPath>..\..\vostok.logging.context\Vostok.Logging.Context\bin\Release\netstandard2.0\Vostok.Logging.Context.dll</HintPath>
     </Reference>
   </ItemGroup>
 
-  <ItemGroup>  
-    <Compile Include="..\..\vostok.commons.threading\Vostok.Commons.Threading\ThreadSafeRandom.cs" Link="Threading\ThreadSafeRandom.cs" />
-  </ItemGroup>
   
   <ItemGroup Condition="'$(OS)' != 'Windows_NT'">
     <Compile Remove="**/*.cs" />

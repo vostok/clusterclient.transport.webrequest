@@ -28,7 +28,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         private readonly ILog log;
         private readonly ConnectTimeLimiter connectTimeLimiter;
-        private readonly ThreadPoolMonitor threadPoolMonitor;
 
         /// <inheritdoc cref="WebRequestTransport" />
         public WebRequestTransport(WebRequestTransportSettings settings, ILog log)
@@ -38,7 +37,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             this.log = log?.ForContext(typeof(WebRequestTransport).Name) ?? throw new ArgumentNullException(nameof(log));
 
             connectTimeLimiter = new ConnectTimeLimiter(log);
-            threadPoolMonitor = ThreadPoolMonitor.Instance;
 
             WebRequestTuner.Touch();
         }
@@ -79,11 +77,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 // If the completed task can not be cast to Task<Response>, it means that timeout task has completed.
                 state.CancelRequest();
                 LogRequestTimeout(request, timeout);
-
-                if (Settings.FixThreadPoolProblems)
-                {
-                    threadPoolMonitor.ReportAndFixIfNeeded(log);
-                }
 
                 // Wait a little for canceled sending task completion before returning result:
                 var senderTaskContinuation = senderTask.ContinueWith(
