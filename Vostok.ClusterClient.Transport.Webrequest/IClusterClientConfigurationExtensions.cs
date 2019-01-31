@@ -1,7 +1,9 @@
-﻿using Vostok.Clusterclient.Core;
+﻿using JetBrains.Annotations;
+using Vostok.Clusterclient.Core;
 
 namespace Vostok.Clusterclient.Transport.Webrequest
 {
+    [PublicAPI]
     public static class IClusterClientConfigurationExtensions
     {
         /// <summary>
