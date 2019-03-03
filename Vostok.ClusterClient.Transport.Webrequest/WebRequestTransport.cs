@@ -49,6 +49,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         /// <inheritdoc />
         public TransportCapabilities Capabilities =>
+            TransportCapabilities.RequestCompositeBody |
             TransportCapabilities.RequestStreaming |
             TransportCapabilities.ResponseStreaming;
 
@@ -179,17 +180,14 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
             try
             {
-                var content = request.Content;
-                if (content != null)
+                if (request.Content != null)
                 {
-                    if (content.Length < LOHObjectSizeThreshold)
-                    {
-                        await SendSmallBufferedBodyAsync(content, state).ConfigureAwait(false);
-                    }
-                    else
-                    {
-                        await SendLargeBufferedBodyAsync(content, state).ConfigureAwait(false);
-                    }
+                    await SendBufferedBodyAsync(request.Content, state).ConfigureAwait(false);
+                }
+                else if (request.CompositeContent != null)
+                {
+                    foreach (var part in request.CompositeContent.Parts)
+                        await SendBufferedBodyAsync(part, state).ConfigureAwait(false);
                 }
                 else if (request.StreamContent != null)
                 {
@@ -214,6 +212,13 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             }
 
             return HttpActionStatus.Success;
+        }
+
+        private static Task SendBufferedBodyAsync(Content content, WebRequestState state)
+        {
+            return content.Length < LOHObjectSizeThreshold 
+                ? SendSmallBufferedBodyAsync(content, state) 
+                : SendLargeBufferedBodyAsync(content, state);
         }
 
         private static Task SendSmallBufferedBodyAsync(Content content, WebRequestState state)

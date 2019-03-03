@@ -55,7 +55,11 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         private static void SetContentLengthHeader(Request request, HttpWebRequest webRequest)
         {
-            webRequest.ContentLength = request.Content?.Length ?? request.StreamContent?.Length ?? 0;
+            webRequest.ContentLength = 
+                request.Content?.Length ??
+                request.CompositeContent?.Length ??
+                request.StreamContent?.Length ?? 
+                0;
 
             var streamContent = request.StreamContent;
             if (streamContent != null && streamContent.Length == null)

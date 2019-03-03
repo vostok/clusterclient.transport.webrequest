@@ -17,6 +17,12 @@ namespace Vostok.Clusterclient.Transport.Webrequest.Tests
         }
 
         [Test]
+        public void Should_advertise_request_composite_body_capability()
+        {
+            transport.Supports(TransportCapabilities.RequestCompositeBody).Should().BeTrue();
+        }
+
+        [Test]
         public void Should_advertise_request_streaming_capability()
         {
             transport.Supports(TransportCapabilities.RequestStreaming).Should().BeTrue();
