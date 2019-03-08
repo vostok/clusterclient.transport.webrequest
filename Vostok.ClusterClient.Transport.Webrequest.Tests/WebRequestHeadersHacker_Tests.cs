@@ -15,7 +15,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest.Tests
         [SetUp]
         public void TestSetup()
         {
-            log = new ConsoleLog();
+            log = new SynchronousConsoleLog();
         }
 
         [Test]

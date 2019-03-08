@@ -7,7 +7,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest.Tests.Functional
 {
     public class Config : ITransportTestConfig
     { 
-        public ILog CreateLog() => new ConsoleLog();
+        public ILog CreateLog() => new SynchronousConsoleLog();
 
         public ITransport CreateTransport(TestTransportSettings settings, ILog log)
         {

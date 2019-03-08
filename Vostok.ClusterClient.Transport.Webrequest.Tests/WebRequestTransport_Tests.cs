@@ -13,7 +13,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest.Tests
         [SetUp]
         public void TestSetup()
         {
-            transport = new WebRequestTransport(new ConsoleLog());
+            transport = new WebRequestTransport(new SynchronousConsoleLog());
         }
 
         [Test]
