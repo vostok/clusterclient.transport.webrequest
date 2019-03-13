@@ -1,4 +1,4 @@
-## 0.1.2 (13-03-2019):
+## 0.1.3 (13-03-2019):
 
 Fixed bug with incorrect response code after request cancellation.
 
