@@ -118,7 +118,9 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
                 if (request.HasBody)
                 {
-                    status = await connectTimeLimiter.LimitConnectTime(SendRequestBodyAsync(request, state), request, state, connectionTimeout).ConfigureAwait(false);
+                    status = await connectTimeLimiter
+                        .LimitConnectTime(SendRequestBodyAsync(request, state, cancellationToken), request, state, connectionTimeout)
+                        .ConfigureAwait(false);
 
                     if (status != HttpActionStatus.Success)
                         return ResponseFactory.BuildFailureResponse(status, state);
@@ -155,14 +157,16 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     return ResponseFactory.BuildSuccessResponse(state);
                 }
 
-                status = await ReadResponseBodyAsync(request, state).ConfigureAwait(false);
+                status = await ReadResponseBodyAsync(request, state, cancellationToken)
+                    .ConfigureAwait(false);
+
                 return status == HttpActionStatus.Success
                     ? ResponseFactory.BuildSuccessResponse(state)
                     : ResponseFactory.BuildFailureResponse(status, state);
             }
         }
 
-        private async Task<HttpActionStatus> SendRequestBodyAsync(Request request, WebRequestState state)
+        private async Task<HttpActionStatus> SendRequestBodyAsync(Request request, WebRequestState state, CancellationToken cancellationToken)
         {
             try
             {
@@ -191,7 +195,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 }
                 else if (request.StreamContent != null)
                 {
-                    var status = await SendStreamedBodyAsync(request.StreamContent, state).ConfigureAwait(false);
+                    var status = await SendStreamedBodyAsync(request.StreamContent, state, cancellationToken).ConfigureAwait(false);
                     if (status != HttpActionStatus.Success)
                         return status;
                 }
@@ -204,7 +208,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             }
             catch (Exception error)
             {
-                if (IsCancellationException(error))
+                if (cancellationToken.IsCancellationRequested)
                     return HttpActionStatus.RequestCanceled;
 
                 LogSendBodyFailure(request, error);
@@ -216,8 +220,8 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         private static Task SendBufferedBodyAsync(Content content, WebRequestState state)
         {
-            return content.Length < LOHObjectSizeThreshold 
-                ? SendSmallBufferedBodyAsync(content, state) 
+            return content.Length < LOHObjectSizeThreshold
+                ? SendSmallBufferedBodyAsync(content, state)
                 : SendLargeBufferedBodyAsync(content, state);
         }
 
@@ -246,7 +250,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             }
         }
 
-        private async Task<HttpActionStatus> SendStreamedBodyAsync(IStreamContent content, WebRequestState state)
+        private async Task<HttpActionStatus> SendStreamedBodyAsync(IStreamContent content, WebRequestState state, CancellationToken cancellationToken)
         {
             var bodyStream = content.Stream;
             var bytesToSend = content.Length ?? long.MaxValue;
@@ -256,13 +260,14 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             {
                 while (bytesSent < bytesToSend)
                 {
-                    var bytesToRead = (int) Math.Min(buffer.Length, bytesToSend - bytesSent);
+                    var bytesToRead = (int)Math.Min(buffer.Length, bytesToSend - bytesSent);
 
                     int bytesRead;
 
                     try
                     {
-                        bytesRead = await bodyStream.ReadAsync(buffer, 0, bytesToRead).ConfigureAwait(false);
+                        bytesRead = await bodyStream.ReadAsync(buffer, 0, bytesToRead, cancellationToken)
+                            .ConfigureAwait(false);
                     }
                     catch (StreamAlreadyUsedException)
                     {
@@ -270,7 +275,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     }
                     catch (Exception error)
                     {
-                        if (IsCancellationException(error))
+                        if (cancellationToken.IsCancellationRequested)
                             return HttpActionStatus.RequestCanceled;
 
                         LogUserStreamFailure(error);
@@ -281,7 +286,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     if (bytesRead == 0)
                         break;
 
-                    await state.RequestStream.WriteAsync(buffer, 0, bytesRead).ConfigureAwait(false);
+                    await state.RequestStream.WriteAsync(buffer, 0, bytesRead, cancellationToken).ConfigureAwait(false);
 
                     bytesSent += bytesRead;
                 }
@@ -294,7 +299,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         {
             try
             {
-                state.Response = (HttpWebResponse) await state.Request.GetResponseAsync().ConfigureAwait(false);
+                state.Response = (HttpWebResponse)await state.Request.GetResponseAsync().ConfigureAwait(false);
                 state.ResponseStream = state.Response.GetResponseStream();
                 return HttpActionStatus.Success;
             }
@@ -359,11 +364,11 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             return size > limit;
         }
 
-        private async Task<HttpActionStatus> ReadResponseBodyAsync(Request request, WebRequestState state)
+        private async Task<HttpActionStatus> ReadResponseBodyAsync(Request request, WebRequestState state, CancellationToken cancellationToken)
         {
             try
             {
-                var contentLength = (int) state.Response.ContentLength;
+                var contentLength = (int)state.Response.ContentLength;
                 if (contentLength > 0)
                 {
                     state.BodyBuffer = Settings.BufferFactory(contentLength);
@@ -377,7 +382,9 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                         while (totalBytesRead < contentLength)
                         {
                             var bytesToRead = Math.Min(contentLength - totalBytesRead, BufferSize);
-                            var bytesRead = await state.ResponseStream.ReadAsync(state.BodyBuffer, totalBytesRead, bytesToRead).ConfigureAwait(false);
+                            var bytesRead = await state.ResponseStream.ReadAsync(state.BodyBuffer, totalBytesRead, bytesToRead, cancellationToken)
+                                .ConfigureAwait(false);
+
                             if (bytesRead == 0)
                                 break;
 
@@ -435,7 +442,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             }
             catch (Exception error)
             {
-                if (IsCancellationException(error))
+                if (cancellationToken.IsCancellationRequested)
                     return HttpActionStatus.RequestCanceled;
 
                 LogReceiveBodyFailure(request, error);
@@ -469,11 +476,6 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     LogWebException(error);
                     return HttpActionStatus.UnknownFailure;
             }
-        }
-
-        private static bool IsCancellationException(Exception error)
-        {
-            return error is OperationCanceledException || (error as WebException)?.Status == WebExceptionStatus.RequestCanceled;
         }
 
         #region Logging

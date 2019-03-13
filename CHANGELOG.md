@@ -1,3 +1,7 @@
+## 0.1.2 (13-03-2019):
+
+Fixed bug with incorrect response code after request cancellation.
+
 ## 0.1.1 (03-03-2019): 
 
 Implemented support for composite request body contents.
