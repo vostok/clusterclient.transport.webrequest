@@ -13,7 +13,7 @@
   </PropertyGroup>
 
   <PropertyGroup>
-    <VersionPrefix>0.1.3</VersionPrefix>
+    <VersionPrefix>0.1.4</VersionPrefix>
   </PropertyGroup>
 
   <PropertyGroup>
@@ -25,6 +25,7 @@
     <PackageProjectUrl>https://github.com/vostok/clusterclient.transport.webrequest</PackageProjectUrl>
     <PackageLicenseUrl>https://github.com/vostok/clusterclient.transport.webrequest/blob/master/LICENSE</PackageLicenseUrl>
     <PackageTags>vostok vostok.clusterclient</PackageTags>
+    <PackageReleaseNotes>https://github.com/vostok/clusterclient.webrequest/blob/master/CHANGELOG.md</PackageReleaseNotes>
     <RepositoryUrl>https://github.com/vostok/clusterclient.transport.webrequest</RepositoryUrl>
   </PropertyGroup>
 
