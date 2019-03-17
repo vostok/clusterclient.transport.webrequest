@@ -34,7 +34,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         {
             Settings = settings;
 
-            this.log = log?.ForContext(typeof(WebRequestTransport).Name) ?? throw new ArgumentNullException(nameof(log));
+            this.log = log ?? throw new ArgumentNullException(nameof(log));
 
             connectTimeLimiter = new ConnectTimeLimiter(log);
 
