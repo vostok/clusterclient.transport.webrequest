@@ -82,8 +82,14 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         /// </summary>
         public X509Certificate2[] ClientCertificates { get; set; }
 
-        internal Func<int, byte[]> BufferFactory { get; set; } = size => new byte[size];
+        /// <summary>
+        /// Gets or sets a delegate used to create response body buffers for given sizes.
+        /// </summary>
+        public Func<int, byte[]> BufferFactory { get; set; } = size => new byte[size];
 
-        internal bool FixNonAsciiHeaders { get; set; }
+        /// <summary>
+        /// If set to <c>true</c>, enables support for non-ASCII header values.
+        /// </summary>
+        public bool FixNonAsciiHeaders { get; set; }
     }
 }
