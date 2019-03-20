@@ -3,14 +3,21 @@ using Vostok.Clusterclient.Core.Model;
 
 namespace Vostok.Clusterclient.Transport.Webrequest
 {
-    internal static class ResponseFactory
+    internal class ResponseFactory
     {
-        public static Response BuildSuccessResponse(WebRequestState state)
+        private readonly WebRequestTransportSettings settings;
+
+        public ResponseFactory(WebRequestTransportSettings settings)
+        {
+            this.settings = settings;
+        }
+
+        public Response BuildSuccessResponse(WebRequestState state)
         {
             return BuildResponse((ResponseCode)(int)state.Response.StatusCode, state);
         }
 
-        public static Response BuildFailureResponse(HttpActionStatus status, WebRequestState state)
+        public Response BuildFailureResponse(HttpActionStatus status, WebRequestState state)
         {
             switch (status)
             {
@@ -40,7 +47,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             }
         }
 
-        public static Response BuildResponse(ResponseCode code, WebRequestState state)
+        public Response BuildResponse(ResponseCode code, WebRequestState state)
         {
             return new Response(
                 code,
@@ -50,7 +57,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             );
         }
 
-        private static Content CreateResponseContent(WebRequestState state)
+        private Content CreateResponseContent(WebRequestState state)
         {
             if (state.ReturnStreamDirectly)
                 return null;
@@ -64,7 +71,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             return null;
         }
 
-        private static Headers CreateResponseHeaders(WebRequestState state)
+        private Headers CreateResponseHeaders(WebRequestState state)
         {
             var headers = Headers.Empty;
 
@@ -73,13 +80,18 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
             foreach (var key in state.Response.Headers.AllKeys)
             {
-                headers = headers.Set(key, state.Response.Headers[key]);
+                var headerValue = state.Response.Headers[key];
+
+                if (settings.FixNonAsciiHeaders)
+                    headerValue = NonAsciiHeadersFixer.FixResponseHeaderValue(headerValue);
+
+                headers = headers.Set(key, headerValue);
             }
 
             return headers;
         }
 
-        private static Stream CreateResponseStream(WebRequestState state)
+        private Stream CreateResponseStream(WebRequestState state)
         {
             return state.ReturnStreamDirectly ? new ResponseBodyStream(state) : null;
         }

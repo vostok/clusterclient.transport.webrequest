@@ -28,6 +28,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         private readonly ILog log;
         private readonly ConnectTimeLimiter connectTimeLimiter;
+        private readonly ResponseFactory responseFactory;
 
         /// <inheritdoc cref="WebRequestTransport" />
         public WebRequestTransport(WebRequestTransportSettings settings, ILog log)
@@ -37,6 +38,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             this.log = log ?? throw new ArgumentNullException(nameof(log));
 
             connectTimeLimiter = new ConnectTimeLimiter(log);
+            responseFactory = new ResponseFactory(settings);
 
             WebRequestTuner.Touch();
         }
@@ -94,7 +96,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 if (!senderTask.IsCompleted)
                     LogFailedToWaitForRequestAbort();
 
-                return ResponseFactory.BuildResponse(ResponseCode.RequestTimeout, state);
+                return responseFactory.BuildResponse(ResponseCode.RequestTimeout, state);
             }
         }
 
@@ -123,7 +125,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                         .ConfigureAwait(false);
 
                     if (status != HttpActionStatus.Success)
-                        return ResponseFactory.BuildFailureResponse(status, state);
+                        return responseFactory.BuildFailureResponse(status, state);
                 }
 
                 // Step 2: receive response from server.
@@ -135,16 +137,16 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     : await connectTimeLimiter.LimitConnectTime(GetResponseAsync(request, state), request, state, connectionTimeout).ConfigureAwait(false);
 
                 if (status != HttpActionStatus.Success)
-                    return ResponseFactory.BuildFailureResponse(status, state);
+                    return responseFactory.BuildFailureResponse(status, state);
 
                 // Step 3 - download request body if it exists.
                 if (!NeedToReadResponseBody(request, state))
-                    return ResponseFactory.BuildSuccessResponse(state);
+                    return responseFactory.BuildSuccessResponse(state);
 
                 if (ResponseBodyIsTooLarge(state))
                 {
                     state.CancelRequestAttempt();
-                    return ResponseFactory.BuildResponse(ResponseCode.InsufficientStorage, state);
+                    return responseFactory.BuildResponse(ResponseCode.InsufficientStorage, state);
                 }
 
                 if (state.RequestCanceled)
@@ -154,15 +156,15 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 {
                     state.ReturnStreamDirectly = true;
                     state.PreventNextDispose();
-                    return ResponseFactory.BuildSuccessResponse(state);
+                    return responseFactory.BuildSuccessResponse(state);
                 }
 
                 status = await ReadResponseBodyAsync(request, state, cancellationToken)
                     .ConfigureAwait(false);
 
                 return status == HttpActionStatus.Success
-                    ? ResponseFactory.BuildSuccessResponse(state)
-                    : ResponseFactory.BuildFailureResponse(status, state);
+                    ? responseFactory.BuildSuccessResponse(state)
+                    : responseFactory.BuildFailureResponse(status, state);
             }
         }
 

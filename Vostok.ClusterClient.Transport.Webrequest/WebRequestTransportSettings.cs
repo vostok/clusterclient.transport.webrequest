@@ -88,7 +88,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         public Func<int, byte[]> BufferFactory { get; set; } = size => new byte[size];
 
         /// <summary>
-        /// If set to <c>true</c>, enables support for non-ASCII header values.
+        /// If set to <c>true</c>, enables support for non-ASCII header values in requests and responses.
         /// </summary>
         public bool FixNonAsciiHeaders { get; set; }
     }

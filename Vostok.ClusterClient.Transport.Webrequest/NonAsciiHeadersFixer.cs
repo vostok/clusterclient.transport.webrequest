@@ -22,7 +22,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 if (IsAscii(header.Value))
                     continue;
 
-                headers = headers.Set(header.Name, FixNonAscii(header.Value));
+                headers = headers.Set(header.Name, FixRequestHeaderValue(header.Value));
             }
 
             if (!ReferenceEquals(headers, request.Headers))
@@ -31,7 +31,22 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             return request;
         }
 
-        private static string FixNonAscii(string value)
+        public static string FixResponseHeaderValue(string value)
+        {
+            if (IsAscii(value))
+                return value;
+
+            var intermediateBuffer = new byte[value.Length];
+
+            for (var i = 0; i < value.Length; i++)
+            {
+                intermediateBuffer[i] = (byte)value[i];
+            }
+
+            return Encoding.UTF8.GetString(intermediateBuffer);
+        }
+
+        private static string FixRequestHeaderValue(string value)
         {
             var utf8Bytes = Encoding.UTF8.GetBytes(value);
 
