@@ -1,3 +1,8 @@
+## 0.1.4 (20-03-2019):
+
+* WebRequestTransportSettings: BufferFactory and FixNonAsciiHeaders options are now public.
+* WebRequestTransportSettings: FixNonAsciiHeaders option now also affects response headers.
+
 ## 0.1.3 (13-03-2019):
 
 Fixed bug with incorrect response code after request cancellation.
