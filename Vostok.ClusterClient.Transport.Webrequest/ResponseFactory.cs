@@ -22,25 +22,25 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             switch (status)
             {
                 case HttpActionStatus.ConnectionFailure:
-                    return BuildResponse(ResponseCode.ConnectFailure, state);
+                    return new Response(ResponseCode.ConnectFailure);
 
                 case HttpActionStatus.SendFailure:
-                    return BuildResponse(ResponseCode.SendFailure, state);
+                    return new Response(ResponseCode.SendFailure);
 
                 case HttpActionStatus.ReceiveFailure:
-                    return BuildResponse(ResponseCode.ReceiveFailure, state);
+                    return new Response(ResponseCode.ReceiveFailure);
 
                 case HttpActionStatus.Timeout:
-                    return BuildResponse(ResponseCode.RequestTimeout, state);
+                    return new Response(ResponseCode.RequestTimeout);
 
                 case HttpActionStatus.RequestCanceled:
-                    return BuildResponse(ResponseCode.Canceled, state);
+                    return new Response(ResponseCode.Canceled);
 
                 case HttpActionStatus.InsufficientStorage:
-                    return BuildResponse(ResponseCode.InsufficientStorage, state);
+                    return new Response(ResponseCode.InsufficientStorage);
 
                 case HttpActionStatus.UserStreamFailure:
-                    return BuildResponse(ResponseCode.StreamInputFailure, state);
+                    return new Response(ResponseCode.StreamInputFailure);
 
                 default:
                     return BuildResponse(ResponseCode.UnknownFailure, state);
