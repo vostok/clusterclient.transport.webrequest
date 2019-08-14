@@ -76,4 +76,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest.Tests.Functional
     internal class ContentStreamingTests : ContentStreamingTests<Config>
     {
     }
+    internal class NetworkErrorsHandlingTests : NetworkErrorsHandlingTests<Config>
+    {
+    }
 }
