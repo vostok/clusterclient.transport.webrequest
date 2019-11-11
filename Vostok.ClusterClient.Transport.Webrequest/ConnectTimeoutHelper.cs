@@ -27,6 +27,10 @@ namespace Vostok.Clusterclient.Transport.Webrequest
             {
                 return isSocketConnected(request);
             }
+            catch (ObjectDisposedException)
+            {
+                return false;
+            }
             catch (Exception error)
             {
                 canCheckSocket = false;
