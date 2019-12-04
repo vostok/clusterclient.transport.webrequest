@@ -1,3 +1,7 @@
+## 0.1.6 (04.12.2019):
+
+* WebRequestTransportSettings: `Pipelined`, `TcpKeepAliveEnabled` and `ArpCacheWarmupEnabled` options are now disabled by default.
+
 ## 0.1.5 (14-08-2019):
 
 Fixed a bug where a network error while reading content could cause the transport to return a response with headers or partial body.

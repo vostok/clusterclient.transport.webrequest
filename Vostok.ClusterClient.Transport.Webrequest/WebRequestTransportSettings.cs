@@ -14,7 +14,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         /// <summary>
         /// Gets or sets whether multiple HTTP/1.1 requests may be pipelined in order on a single TCP connection.
         /// </summary>
-        public bool Pipelined { get; set; } = true;
+        public bool Pipelined { get; set; }
 
         /// <summary>
         /// How much time connection will be alive after last usage. Note that if no other connections to endpoint are active, its value will be divided by 4.
@@ -59,7 +59,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         /// <summary>
         /// Enables/disables TCP keep-alive mechanism. Currently only works in Windows.
         /// </summary>
-        public bool TcpKeepAliveEnabled { get; set; } = true;
+        public bool TcpKeepAliveEnabled { get; set; }
 
         /// <summary>
         /// Gets or sets the duration between two keep-alive transmissions in idle condition.
@@ -75,7 +75,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         /// <summary>
         /// Enables/disables ARP cache warmup. Currently only works in Windows.
         /// </summary>
-        public bool ArpCacheWarmupEnabled { get; set; } = true;
+        public bool ArpCacheWarmupEnabled { get; set; }
 
         /// <summary>
         /// Gets or sets a list of client certificats for SSL connections.
