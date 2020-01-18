@@ -477,16 +477,16 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                     LogConnectionFailure(request, error);
                     return HttpActionStatus.ConnectionFailure;
                 case WebExceptionStatus.SendFailure:
-                    LogWebException(error);
+                    LogWebException(request, error);
                     return HttpActionStatus.SendFailure;
                 case WebExceptionStatus.ReceiveFailure:
-                    LogWebException(error);
+                    LogWebException(request, error);
                     return HttpActionStatus.ReceiveFailure;
                 case WebExceptionStatus.RequestCanceled: return HttpActionStatus.RequestCanceled;
                 case WebExceptionStatus.Timeout: return HttpActionStatus.Timeout;
                 case WebExceptionStatus.ProtocolError: return HttpActionStatus.ProtocolError;
                 default:
-                    LogWebException(error);
+                    LogWebException(request, error);
                     return HttpActionStatus.UnknownFailure;
             }
         }
@@ -494,53 +494,31 @@ namespace Vostok.Clusterclient.Transport.Webrequest
         #region Logging
 
         private void LogRequestTimeout(Request request, TimeSpan timeout)
-        {
-            log.Error("Request timed out. Target = {Target}. Timeout = {Timeout}.", request.Url.Authority, timeout.ToPrettyString());
-        }
+            => log.Warn("Request timed out. Target = {Target}. Timeout = {Timeout}.", request.Url.Authority, timeout.ToPrettyString());
 
         private void LogConnectionFailure(Request request, WebException error)
-        {
-            log.Warn(
-                error.InnerException ?? error,
-                "Connection failure. Target = {Target}. Status = {Status}.",
-                request.Url.Authority,
-                error.Status);
-        }
+            => log.Warn(error.InnerException ?? error,  "Connection failure. Target = {Target}. Status = {Status}.", request.Url.Authority,  error.Status);
 
-        private void LogWebException(WebException error)
-        {
-            log.Error(error.InnerException ?? error, "Error in sending request. Status = {Status}.", error.Status);
-        }
+        private void LogWebException(Request request, WebException error)
+            => log.Warn(error.InnerException ?? error, "Failed to send request. Target = {Target}. Status = {Status}.", request.Url.Authority, error.Status);
 
         private void LogUnknownException(Exception error)
-        {
-            log.Error(error, "Unknown error in sending request.");
-        }
+            => log.Error(error, "Unknown exception has occurred while sending request.");
 
         private void LogSendBodyFailure(Request request, Exception error)
-        {
-            log.Error(error, "Error in sending request body to {Target}", request.Url.Authority);
-        }
+            => log.Warn(error, "Error in sending request body to {Target}.", request.Url.Authority);
 
         private void LogUserStreamFailure(Exception error)
-        {
-            log.Error(error, "Failure in reading input stream while sending request body.");
-        }
+            => log.Warn(error, "Failure in reading input stream while sending request body.");
 
         private void LogReceiveBodyFailure(Request request, Exception error)
-        {
-            log.Error(error, "Error in receiving request body from {Target}", request.Url.Authority);
-        }
+            => log.Warn(error, "Error in receiving request body from {Target}", request.Url.Authority);
 
         private void LogFailedToWaitForRequestAbort()
-        {
-            log.Warn("Timed out request was aborted but did not complete in {RequestAbortTimeout}.", Settings.RequestAbortTimeout.ToPrettyString());
-        }
+            => log.Warn("Timed out request was aborted but did not complete in {RequestAbortTimeout}.", Settings.RequestAbortTimeout.ToPrettyString());
 
         private void LogResponseBodyTooLarge(long size, long limit)
-        {
-            log.Error("Response body size {Size} is larger than configured limit of {Limit} bytes.", size, limit);
-        }
+            => log.Warn("Response body size {Size} is larger than configured limit of {Limit} bytes.", size, limit);
 
         #endregion
     }
