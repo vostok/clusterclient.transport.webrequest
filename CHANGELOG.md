@@ -1,3 +1,8 @@
+## 0.1.7 (18.01.2020):
+
+* WebRequestTransport: fixed an obscure exception that could happen due to a race condition on CancellationTokenSource when using ForkingRequestStrategy.
+* WebRequestTransport: converted almost all (save for unexpected exceptions) error logging from ERROR to WARN level.
+
 ## 0.1.6 (04.12.2019):
 
 * WebRequestTransportSettings: `Pipelined`, `TcpKeepAliveEnabled` and `ArpCacheWarmupEnabled` options are now disabled by default.
