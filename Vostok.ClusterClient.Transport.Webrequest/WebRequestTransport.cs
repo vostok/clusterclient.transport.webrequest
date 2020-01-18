@@ -104,11 +104,22 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
         private async Task<Response> SendInternalAsync(Request request, WebRequestState state, TimeSpan? connectionTimeout, CancellationToken cancellationToken)
         {
-            using (cancellationToken.Register(state.CancelRequest))
+            CancellationTokenRegistration registration;
+
+            try
+            {
+                registration = cancellationToken.Register(state.CancelRequest);
+            }
+            catch (ObjectDisposedException)
+            {
+                return Responses.Canceled;
+            }
+
+            using (registration)
             using (state)
             {
                 if (state.RequestCanceled)
-                    return new Response(ResponseCode.Canceled);
+                    return Responses.Canceled;
 
                 state.Request = WebRequestFactory.Create(request, state.TimeRemaining, Settings, log);
 
@@ -116,7 +127,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
                 // Step 1: send request body if it was supplied in request.
                 if (state.RequestCanceled)
-                    return new Response(ResponseCode.Canceled);
+                    return Responses.Canceled;
 
                 if (request.HasBody)
                 {
@@ -130,7 +141,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
 
                 // Step 2: receive response from server.
                 if (state.RequestCanceled)
-                    return new Response(ResponseCode.Canceled);
+                    return Responses.Canceled;
 
                 status = request.HasBody
                     ? await GetResponseAsync(request, state).ConfigureAwait(false)
@@ -150,7 +161,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
                 }
 
                 if (state.RequestCanceled)
-                    return new Response(ResponseCode.Canceled);
+                    return Responses.Canceled;
 
                 if (NeedToStreamResponseBody(state))
                 {
