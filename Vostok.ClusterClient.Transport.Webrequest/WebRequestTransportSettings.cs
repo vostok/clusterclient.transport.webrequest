@@ -9,6 +9,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
     /// A class that represents <see cref="WebRequestTransport" /> settings.
     /// </summary>
     [PublicAPI]
+    [Obsolete("This module is now obsolete. Please use an equivalent implementation from Vostok.ClusterClient.Transport library.")]
     public class WebRequestTransportSettings
     {
         /// <summary>

@@ -19,6 +19,7 @@ namespace Vostok.Clusterclient.Transport.Webrequest
     /// <para>You can also use <see cref="IClusterClientConfigurationExtensions.SetupWebRequestTransport(Core.IClusterClientConfiguration)"/> extension to set up this transport in your configuration.</para>
     /// </summary>
     [PublicAPI]
+    [Obsolete("This module is now obsolete. Please use an equivalent implementation from Vostok.ClusterClient.Transport library.")]
     public class WebRequestTransport : ITransport
     {
         private const int BufferSize = 16 * 1024;
